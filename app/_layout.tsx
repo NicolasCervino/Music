@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/theme';
+import { PlayerProvider } from '@/packages/MusicPlayer/context/PlayerContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -37,10 +38,12 @@ function NavigationWrapper() {
 
   return (
     <ThemeProvider value={theme.dark ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-      <StatusBar style={theme.dark ? 'light' : 'dark'} />
+      <PlayerProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+        <StatusBar style={theme.dark ? 'light' : 'dark'} />
+      </PlayerProvider>
     </ThemeProvider>
   );
 }

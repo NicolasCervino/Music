@@ -2,16 +2,27 @@ import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/atoms';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useImageColor } from '@/packages/Images/hooks/useImageColor';
+import { usePlayerContext } from '@/packages/MusicPlayer/hooks/usePlayerContext';
+import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
 
 export default function PlayerBar() {
-  const imageUrl = 'https://cdn-images.dzcdn.net/images/cover/6501bd06032fbd397bc1ad06233f5392/500x500-000000-80-0-0.jpg';
-  const { backgroundColor, onLoad } = useImageColor(imageUrl);
+  const {
+    currentTrack,
+    isPlaying,
+    artworkColor,
+    handleArtworkLoad,
+    pauseTrack,
+    resumeTrack,
+    stopTrack,
+  } = usePlayer();
+
+  // Don't render if no track is selected
+  if (!currentTrack) return null;
 
   return (
     <View style={{
       height: 68,
-      backgroundColor,
+      backgroundColor: artworkColor,
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 20,
@@ -25,17 +36,17 @@ export default function PlayerBar() {
       {/* Song info */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
         <Image
-          source={imageUrl}
+          source={{ uri: currentTrack.artwork }}
           style={{ width: 32, height: 32, borderRadius: 4 }}
           contentFit="cover"
-          onLoad={onLoad}
+          onLoad={handleArtworkLoad}
         />
         <View>
           <Text variant="caption" style={{ color: '#FFFFFF', fontWeight: '500' }}>
-            Moonlights
+            {currentTrack.title}
           </Text>
           <Text variant="caption" style={{ color: '#FFFFFF' }}>
-            Burbank
+            {currentTrack.artist}
           </Text>
         </View>
       </View>
@@ -46,7 +57,7 @@ export default function PlayerBar() {
           <Ionicons name="play-skip-back" size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Ionicons name="play" size={20} color="white" />
+          <Ionicons name={isPlaying ? "pause" : "play"} size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity>
           <Ionicons name="play-skip-forward" size={20} color="white" />
