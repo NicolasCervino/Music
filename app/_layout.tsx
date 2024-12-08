@@ -37,8 +37,8 @@ function NavigationWrapper() {
 
   return (
     <ThemeProvider value={theme.dark ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
       </Stack>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
     </ThemeProvider>
