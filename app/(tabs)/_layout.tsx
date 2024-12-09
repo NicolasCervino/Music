@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Layout() {
   const [activeTab, setActiveTab] = useState('home');
-  const { isPlayerReady, isExpanded, artworkColor } = usePlayer();
+  const { isPlayerReady, isExpanded, artworkColor, isVisible } = usePlayer();
   const { theme } = useTheme();
   const navigation = useNavigation();
 
@@ -27,7 +27,7 @@ export default function Layout() {
 
   useEffect(() => {
     if (Platform.OS === 'android') {
-      StatusBar.setBackgroundColor(statusBarBackgroundColor);
+      StatusBar.setBackgroundColor(statusBarBackgroundColor, true);
       StatusBar.setBarStyle(statusBarStyle as StatusBarStyle);
 
       // Always update navigation bar color, not just when expanded
@@ -49,7 +49,7 @@ export default function Layout() {
       <HeaderLogo />
       <TabBar activeTab={activeTab} onTabPress={setActiveTab} />
       <TabContent activeTab={activeTab} />
-      {isPlayerReady && <ExpandablePlayerBar />}
+      {isVisible && <ExpandablePlayerBar />}
     </SafeAreaView>
   );
 }

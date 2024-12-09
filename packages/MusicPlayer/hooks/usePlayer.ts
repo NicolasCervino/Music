@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import { usePlayerContext } from './usePlayerContext';
+import { useCallback, useEffect, useRef } from 'react';
+import { usePlayerStore } from '@/store/usePlayerStore';
 import { useImageColor } from '@/packages/Images/hooks/useImageColor';
-import { Track } from '../types';
 
 export function usePlayer() {
   const {
@@ -10,20 +9,24 @@ export function usePlayer() {
     artworkColor,
     isArtworkLoaded,
     isExpanded,
-    setIsExpanded,
+    isVisible,
     setArtworkColor,
     setIsArtworkLoaded,
     playTrack,
     pauseTrack,
     resumeTrack,
     stopTrack,
-  } = usePlayerContext();
+    setIsExpanded,
+  } = usePlayerStore();
 
   const { backgroundColor, onLoad, isLoading } = useImageColor(currentTrack?.artwork);
+  const loadingRef = useRef(false);
 
-  // Handle artwork loading
   const handleArtworkLoad = useCallback(async () => {
+    if (loadingRef.current) return;
+
     try {
+      loadingRef.current = true;
       await onLoad();
       if (backgroundColor) {
         setArtworkColor(backgroundColor);
@@ -32,18 +35,17 @@ export function usePlayer() {
     } catch (error) {
       console.error('Failed to load artwork:', error);
       setIsArtworkLoaded(false);
+    } finally {
+      loadingRef.current = false;
     }
   }, [onLoad, backgroundColor, setArtworkColor, setIsArtworkLoaded]);
 
-  // Load artwork when track changes
   useEffect(() => {
-    if (currentTrack) {
-      setIsArtworkLoaded(false);
+    if (currentTrack && !isArtworkLoaded) {
       handleArtworkLoad();
     }
-  }, [currentTrack, handleArtworkLoad]);
+  }, [currentTrack, handleArtworkLoad, isArtworkLoaded]);
 
-  // Computed property to determine if player is ready
   const isPlayerReady = Boolean(
     currentTrack &&
     isArtworkLoaded &&
@@ -57,12 +59,13 @@ export function usePlayer() {
     artworkColor,
     isArtworkLoaded,
     isPlayerReady,
+    isExpanded,
+    isVisible,
+    handleArtworkLoad,
     playTrack,
     pauseTrack,
     resumeTrack,
     stopTrack,
-    handleArtworkLoad,
-    isExpanded,
     setIsExpanded,
   };
 }

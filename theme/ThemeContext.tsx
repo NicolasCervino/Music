@@ -1,10 +1,11 @@
 import { createContext, useEffect, useState } from 'react';
 import { COLORS } from '@/constants';
 import { useColorScheme } from 'react-native';
+import { ThemeColors } from '@/constants/Colors';
 
 type Theme = {
   dark: boolean;
-  colors: typeof COLORS.light | typeof COLORS.dark;
+  colors: ThemeColors;
 };
 
 const lightTheme: Theme = {

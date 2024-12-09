@@ -1,6 +1,6 @@
-import { Song } from "./type";
+import { Track } from "@/entities";
 
-export const SAMPLE_SONGS: Song[] = [
+export const SAMPLE_SONGS: Track[] = [
   {
     id: '1',
     title: 'Money Longer',

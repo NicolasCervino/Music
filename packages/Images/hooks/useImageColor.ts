@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useTheme } from '@/theme';
 import { ensureColorContrast } from '../utils/utils';
 import { Image as RNImage } from 'react-native';
@@ -8,6 +8,7 @@ export function useImageColor(imageUrl?: any) {
   const { theme } = useTheme();
   const [backgroundColor, setBackgroundColor] = useState(theme.colors.accent);
   const [isLoading, setIsLoading] = useState(false);
+  const lastProcessedUrl = useRef<string>();
 
   const extractColor = async (uri: string) => {
     try {
@@ -37,11 +38,18 @@ export function useImageColor(imageUrl?: any) {
       return;
     }
 
+    const uri = typeof imageUrl === 'string'
+      ? imageUrl
+      : RNImage.resolveAssetSource(imageUrl).uri;
+
+    // Skip if we've already processed this URL
+    if (lastProcessedUrl.current === uri) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const uri = typeof imageUrl === 'string'
-        ? imageUrl
-        : RNImage.resolveAssetSource(imageUrl).uri;
+      lastProcessedUrl.current = uri;
       const dominantColor = await extractColor(uri);
       const adjustedColor = ensureColorContrast(dominantColor);
       setBackgroundColor(adjustedColor);

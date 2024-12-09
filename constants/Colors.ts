@@ -17,3 +17,4 @@ export const COLORS = {
 
 export type ColorScheme = keyof typeof COLORS;
 export type ColorKey = keyof typeof COLORS.light;
+export type ThemeColors = Record<ColorKey, string>;

@@ -1,4 +1,3 @@
-import { useAnimatedReaction, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { View } from 'react-native';
 import { useCallback, useRef, useState } from 'react';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -12,7 +11,7 @@ import { usePlayerBarAnimation } from "./hooks/usePlayerBarAnimation";
 export default function ExpandablePlayerBar() {
   const { theme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const { artworkColor, isPlayerReady, setIsExpanded } = usePlayer();
+  const { artworkColor, isPlayerReady, setIsExpanded, currentTrack } = usePlayer();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 

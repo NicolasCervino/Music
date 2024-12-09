@@ -18,9 +18,8 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
     handleArtworkLoad,
     pauseTrack,
     resumeTrack,
-    isExpanded
+    isExpanded,
   } = usePlayer();
-  const insets = useSafeAreaInsets();
 
   if (!currentTrack) return null;
 
@@ -58,7 +57,10 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
             <Ionicons name="play-skip-back" size={24} color="white" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.playButton, styles.controlButton]}>
+          <TouchableOpacity
+            style={[styles.playButton, styles.controlButton]}
+            onPress={isPlaying ? pauseTrack : resumeTrack}
+          >
             <Ionicons name={isPlaying ? "pause" : "play"} size={32} color="black" />
           </TouchableOpacity>
 

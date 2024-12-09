@@ -13,9 +13,21 @@ type MiniPlayerProps = {
   isReady: boolean;
 }
 function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
-  const { currentTrack, handleArtworkLoad, isPlaying } = usePlayer();
+  const {
+    currentTrack,
+    handleArtworkLoad,
+    isPlaying,
+    pauseTrack,
+    resumeTrack
+  } = usePlayer();
 
-  if (!currentTrack) return null;
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pauseTrack();
+    } else {
+      resumeTrack();
+    }
+  };
 
   return (
     <TouchableOpacity
@@ -33,17 +45,17 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
         {/* Song info */}
         <View style={styles.songInfo}>
           <Image
-            source={{ uri: currentTrack.artwork }}
+            source={{ uri: currentTrack?.artwork ?? '' }}
             style={styles.artwork}
             contentFit="cover"
             onLoad={handleArtworkLoad}
           />
           <View>
             <Text variant="caption" style={styles.title}>
-              {currentTrack.title}
+              {currentTrack?.title ?? ''}
             </Text>
             <Text variant="caption" style={styles.artist}>
-              {currentTrack.artist}
+              {currentTrack?.artist ?? ''}
             </Text>
           </View>
         </View>
@@ -53,13 +65,14 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
           <TouchableOpacity>
             <Ionicons name="play-skip-back" size={20} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handlePlayPause}>
             <Ionicons name={isPlaying ? "pause" : "play"} size={20} color="white" />
           </TouchableOpacity>
           <TouchableOpacity>
             <Ionicons name="play-skip-forward" size={20} color="white" />
           </TouchableOpacity>
         </View>
+
       </View>
     </TouchableOpacity >
   )
