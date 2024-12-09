@@ -30,52 +30,48 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
         {
           backgroundColor: isReady ? backgroundColor : 'transparent',
           opacity: isReady ? 1 : 0,
-          paddingTop: insets.top, // Add this
-          marginTop: -insets.top, // Add this
+          paddingTop: insets.top,
+          marginTop: -insets.top,
         }
       ]}
     >
-      <Image
-        source={{ uri: currentTrack.artwork }}
-        style={styles.artwork}
-        contentFit="cover"
-        onLoad={handleArtworkLoad}
-      />
+      <View style={styles.contentContainer}>
+        <Image
+          source={{ uri: currentTrack.artwork }}
+          style={styles.artwork}
+          contentFit="cover"
+          onLoad={handleArtworkLoad}
+        />
 
-      <View style={styles.songInfo}>
-        <Text style={styles.title}>{currentTrack.title}</Text>
-        <Text style={styles.artist}>{currentTrack.artist}</Text>
+        <View style={styles.songInfo}>
+          <Text style={styles.title}>{currentTrack.title}</Text>
+          <Text style={styles.artist}>{currentTrack.artist}</Text>
+        </View>
+
+        <View style={styles.controls}>
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="shuffle" size={24} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="play-skip-back" size={24} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.playButton, styles.controlButton]}>
+            <Ionicons name={isPlaying ? "pause" : "play"} size={32} color="black" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="play-skip-forward" size={24} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.controlButton}>
+            <Ionicons name="repeat" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+
       </View>
-
-      <View style={styles.controls}>
-        <TouchableOpacity>
-          <Ionicons name="shuffle" size={24} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity>
-          <Ionicons name="play-skip-back" size={24} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.playButton}
-          onPress={isPlaying ? pauseTrack : resumeTrack}
-        >
-          <Ionicons
-            name={isPlaying ? "pause" : "play"}
-            size={32}
-            color="black"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity>
-          <Ionicons name="play-skip-forward" size={24} color="white" />
-        </TouchableOpacity>
-
-        <TouchableOpacity>
-          <Ionicons name="repeat" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-    </View>
+    </View >
   );
 }
 
@@ -83,6 +79,10 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  contentContainer: {
+    justifyContent: 'space-evenly',
+    flex: 1,
   },
   artwork: {
     width: '100%',
@@ -108,7 +108,15 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    width: '100%',
+    position: 'relative',
+    zIndex: 2,
+  },
+  controlButton: {
+    width: 66,
+    height: 66,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   playButton: {
     width: 64,
@@ -117,5 +125,5 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  }
 });
