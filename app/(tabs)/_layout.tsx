@@ -40,7 +40,7 @@ export default function Layout() {
   }, [isExpanded, isPlayerReady, statusBarBackgroundColor, statusBarStyle]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <StatusBar
         backgroundColor={statusBarBackgroundColor}
         barStyle={statusBarStyle as StatusBarStyle}
