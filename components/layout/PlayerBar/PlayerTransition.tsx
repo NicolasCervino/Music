@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import MiniPlayer from './MiniPlayer';
 import PlayerView from '@/views/Player/PlayerView';
+import { useEffect } from 'react';
 
 type PlayerTransitionProps = {
   progress: SharedValue<number>;
@@ -20,12 +21,18 @@ export default function PlayerTransition({
 }: PlayerTransitionProps) {
 
   const miniPlayerStyle = useAnimatedStyle(() => ({
-    opacity: isAtInitialPosition.value ? 1 : 0,
+    opacity: isAtInitialPosition.value ? 1 :
+      progress.value >= 0.95 ? 1 :
+        progress.value <= 0.85 ? 0 :
+          (progress.value - 0.85) / (0.95 - 0.85),
     pointerEvents: isAtInitialPosition.value ? 'auto' : 'none' as const,
   }));
 
   const playerViewStyle = useAnimatedStyle(() => ({
-    opacity: isAtInitialPosition.value ? 0 : 1,
+    opacity: isAtInitialPosition.value ? 0 :
+      progress.value >= 0.95 ? 0 :
+        progress.value <= 0.85 ? 1 :
+          1 - ((progress.value - 0.85) / (0.95 - 0.85)),
     pointerEvents: isAtInitialPosition.value ? 'none' : 'auto' as const,
   }));
 

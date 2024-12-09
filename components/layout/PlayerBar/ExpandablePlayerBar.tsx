@@ -1,15 +1,14 @@
-import { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import { useAnimatedReaction, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
-import MiniPlayer from './MiniPlayer';
-import PlayerView from '@/views/Player/PlayerView';
 import { PLAYER_BAR_HEIGHT } from './constants';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PlayerTransition from "./PlayerTransition";
+import { useTheme } from "@/theme";
 
 export default function ExpandablePlayerBar() {
+  const { theme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { artworkColor, isPlayerReady, isExpanded, setIsExpanded } = usePlayer();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,7 +19,7 @@ export default function ExpandablePlayerBar() {
   const lastPositionRef = useRef<number>(0);
   const isAtInitialPos = useSharedValue(true);
   const progress = useSharedValue(0);
-  const backgroundColorValue = useSharedValue('transparent');
+  const backgroundColorValue = useSharedValue<string>(theme.colors.background);
 
   // Snap points for the bottom sheet (collapsed and expanded states)
   const snapPoints = [PLAYER_BAR_HEIGHT, '100%'];
@@ -47,7 +46,7 @@ export default function ExpandablePlayerBar() {
 
       // If user hasn't interacted yet, keep it transparent
       if (!hasUserInteracted) {
-        backgroundColorValue.value = 'transparent';
+        backgroundColorValue.value = theme.colors.background;
         return;
       }
 
@@ -65,7 +64,7 @@ export default function ExpandablePlayerBar() {
       isAtInitialPos.value = isAtInitialPosition;
 
       // Update background color directly in the animation thread
-      backgroundColorValue.value = isAtInitialPosition ? 'transparent' : artworkColor;
+      backgroundColorValue.value = isAtInitialPosition ? theme.colors.background : artworkColor;
 
       lastPositionRef.current = currentPosition;
     },
@@ -86,7 +85,7 @@ export default function ExpandablePlayerBar() {
         enablePanDownToClose={false}
         enableOverDrag={false}
       >
-        <BottomSheetView style={styles.contentContainer}>
+        <BottomSheetView style={[styles.contentContainer, { backgroundColor: theme.colors.background }]}>
           <PlayerTransition
             progress={progress}
             artworkColor={artworkColor}
@@ -120,7 +119,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   contentContainer: {
-    backgroundColor: 'transparent',
     flex: 1,
   }
 });

@@ -18,6 +18,7 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
     handleArtworkLoad,
     pauseTrack,
     resumeTrack,
+    isExpanded
   } = usePlayer();
   const insets = useSafeAreaInsets();
 
@@ -30,8 +31,8 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
         {
           backgroundColor: isReady ? backgroundColor : 'transparent',
           opacity: isReady ? 1 : 0,
-          paddingTop: insets.top,
-          marginTop: -insets.top,
+          borderTopLeftRadius: isExpanded ? 0 : 50,
+          borderTopRightRadius: isExpanded ? 0 : 50,
         }
       ]}
     >
@@ -78,6 +79,7 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
     padding: 20,
   },
   contentContainer: {

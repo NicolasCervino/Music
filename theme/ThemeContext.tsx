@@ -1,36 +1,20 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
+import { COLORS } from '@/constants';
+import { useColorScheme } from 'react-native';
 
 type Theme = {
   dark: boolean;
-  colors: {
-    primary: string;
-    background: string;
-    card: string;
-    text: string;
-    accent: string;
-  };
+  colors: typeof COLORS.light | typeof COLORS.dark;
 };
 
 const lightTheme: Theme = {
   dark: false,
-  colors: {
-    primary: '#007AFF',
-    background: '#FFFFFF',
-    card: '#F2F2F2',
-    text: '#000000',
-    accent: '#007AFF',
-  },
+  colors: COLORS.light,
 };
 
 const darkTheme: Theme = {
   dark: true,
-  colors: {
-    primary: '#0A84FF',
-    background: '#000000',
-    card: '#1C1C1E',
-    text: '#FFFFFF',
-    accent: '#0A84FF',
-  },
+  colors: COLORS.dark,
 };
 
 type ThemeContextType = {
@@ -42,7 +26,12 @@ type ThemeContextType = {
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(lightTheme);
+  const colorScheme = useColorScheme();
+  const [theme, setTheme] = useState<Theme>(colorScheme === 'dark' ? darkTheme : lightTheme);
+
+  useEffect(() => {
+    setTheme(colorScheme === 'dark' ? darkTheme : lightTheme);
+  }, [colorScheme]);
 
   const toggleTheme = () => {
     setTheme(theme.dark ? lightTheme : darkTheme);

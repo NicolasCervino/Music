@@ -15,8 +15,6 @@ export default function Layout() {
   const { theme } = useTheme();
   const navigation = useNavigation();
 
-
-
   const statusBarStyle = isExpanded && isPlayerReady
     ? 'light'
     : theme.dark
@@ -25,7 +23,7 @@ export default function Layout() {
 
   const statusBarBackgroundColor = isExpanded && isPlayerReady
     ? artworkColor
-    : 'transparent';
+    : theme.colors.background;
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -36,7 +34,7 @@ export default function Layout() {
       navigation.setOptions({
         navigationBarColor: isExpanded && isPlayerReady
           ? statusBarBackgroundColor
-          : 'transparent',
+          : theme.colors.background,
       });
     }
   }, [isExpanded, isPlayerReady, statusBarBackgroundColor, statusBarStyle]);

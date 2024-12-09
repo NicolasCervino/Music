@@ -6,6 +6,7 @@ import { Text } from '@/components/atoms'
 import { View, StyleSheet } from 'react-native'
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer'
 import { PLAYER_BAR_HEIGHT } from './constants'
+import { useTheme } from '@/theme'
 
 type MiniPlayerProps = {
   onPress: () => void;
