@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import MiniPlayer from './MiniPlayer';
 import PlayerView from '@/views/Player/PlayerView';
-import { useEffect } from 'react';
 
 type PlayerTransitionProps = {
   progress: SharedValue<number>;
