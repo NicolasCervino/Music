@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/theme';
 import { PlayerProvider } from '@/packages/MusicPlayer/context/PlayerContext';
+import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -39,10 +41,12 @@ function NavigationWrapper() {
   return (
     <ThemeProvider value={theme.dark ? DarkTheme : DefaultTheme}>
       <PlayerProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-        <StatusBar style={theme.dark ? 'light' : 'dark'} />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+          <StatusBar style={theme.dark ? 'light' : 'dark'} />
+        </GestureHandlerRootView>
       </PlayerProvider>
     </ThemeProvider>
   );

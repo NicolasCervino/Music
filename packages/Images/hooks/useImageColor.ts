@@ -7,6 +7,7 @@ import { getColors } from 'react-native-image-colors';
 export function useImageColor(imageUrl?: any) {
   const { theme } = useTheme();
   const [backgroundColor, setBackgroundColor] = useState(theme.colors.accent);
+  const [isLoading, setIsLoading] = useState(false);
 
   const extractColor = async (uri: string) => {
     try {
@@ -16,7 +17,6 @@ export function useImageColor(imageUrl?: any) {
         quality: 'low',
       });
 
-      // Get the most appropriate color based on platform
       let dominantColor = theme.colors.accent;
       if (colors.platform === 'android') {
         dominantColor = colors.dominant;
@@ -37,6 +37,7 @@ export function useImageColor(imageUrl?: any) {
       return;
     }
 
+    setIsLoading(true);
     try {
       const uri = typeof imageUrl === 'string'
         ? imageUrl
@@ -47,11 +48,14 @@ export function useImageColor(imageUrl?: any) {
     } catch (error) {
       console.error('Error in onLoad:', error);
       setBackgroundColor(theme.colors.accent);
+    } finally {
+      setIsLoading(false);
     }
   }, [imageUrl, theme.colors.accent]);
 
   return {
     backgroundColor,
-    onLoad
+    onLoad,
+    isLoading
   };
 }
