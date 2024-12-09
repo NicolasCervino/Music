@@ -25,6 +25,7 @@ export function Text({ style, variant = 'body', ...props }: TextProps) {
     caption: {
       fontSize: 14,
       lineHeight: 21,
+      letterSpacing: 0.3,
     },
   };
 
