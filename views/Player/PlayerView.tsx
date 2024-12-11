@@ -6,6 +6,7 @@ import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepeatMode } from 'react-native-track-player';
+import { ProgressSlider } from '@/packages/MusicPlayer/components/ProgressSlider.tsx/ProgressSlider';
 
 type PlayerViewProps = {
   backgroundColor: string;
@@ -40,6 +41,7 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
         }
       ]}
     >
+      {/* Artwork section */}
       <View style={styles.contentContainer}>
         {currentTrack.artwork ? (
           <Image
@@ -58,11 +60,16 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
           </View>
         )}
 
+        {/* Song info section */}
         <View style={styles.songInfo}>
           <Text style={styles.title}>{currentTrack.title}</Text>
           <Text style={styles.artist}>{currentTrack.artist}</Text>
         </View>
 
+        {/* Progress slider */}
+        <ProgressSlider />
+
+        {/* Controls section */}
         <View style={styles.controls}>
           <TouchableOpacity style={styles.controlButton}>
             <Ionicons name="shuffle" size={24} color="white" />
