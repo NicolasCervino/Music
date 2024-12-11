@@ -18,7 +18,9 @@ export function usePlayer() {
     stopTrack,
     setIsExpanded,
     nextTrack,
-    previousTrack
+    previousTrack,
+    repeatMode,
+    toggleRepeatMode
   } = usePlayerStore();
 
   const { backgroundColor, onLoad, isLoading } = useImageColor(currentTrack?.artwork);
@@ -70,6 +72,8 @@ export function usePlayer() {
     stopTrack,
     setIsExpanded,
     nextTrack,
-    previousTrack
+    previousTrack,
+    repeatMode,
+    toggleRepeatMode
   };
 }

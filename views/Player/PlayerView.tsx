@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RepeatMode } from 'react-native-track-player';
 
 type PlayerViewProps = {
   backgroundColor: string;
@@ -20,7 +21,9 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
     resumeTrack,
     isExpanded,
     nextTrack,
-    previousTrack
+    previousTrack,
+    repeatMode,
+    toggleRepeatMode
   } = usePlayer();
 
   if (!currentTrack) return null;
@@ -80,8 +83,15 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
             <Ionicons name="play-skip-forward" size={24} color="white" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton}>
-            <Ionicons name="repeat" size={24} color="white" />
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={toggleRepeatMode}
+          >
+            <Ionicons
+              name={repeatMode === RepeatMode.Off ? "repeat" : "repeat-outline"}
+              size={24}
+              color={repeatMode === RepeatMode.Off ? "rgba(255, 255, 255, 0.5)" : "white"}
+            />
           </TouchableOpacity>
         </View>
 

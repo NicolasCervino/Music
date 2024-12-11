@@ -41,6 +41,8 @@ export class TrackPlayerService {
         },
       });
 
+      await TrackPlayer.setRepeatMode(RepeatMode.Off);
+
       this.isInitialized = true;
     } catch (error) {
       console.error('Error setting up player:', error);

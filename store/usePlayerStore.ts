@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Track } from '@/entities';
 import { MusicMetadataService } from '@/services/MusicMetadataService';
 import { TrackPlayerService } from '@/services/TrackPlayerService';
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, { RepeatMode } from 'react-native-track-player';
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -12,6 +12,7 @@ interface PlayerState {
   isExpanded: boolean;
   songs: Track[];
   isVisible: boolean;
+  repeatMode: RepeatMode;
 }
 
 interface PlayerActions {
@@ -28,6 +29,7 @@ interface PlayerActions {
   previousTrack: () => void;
   setIsVisible: (visible: boolean) => void;
   loadSongs: () => Promise<void>;
+  toggleRepeatMode: () => void;
 }
 
 export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => ({
@@ -39,6 +41,7 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
   isExpanded: false,
   isVisible: false,
   songs: [],
+  repeatMode: RepeatMode.Off,
 
   // Actions
   loadSongs: async () => {
@@ -97,12 +100,8 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       await TrackPlayerService.addToQueue(songs, trackIndex);
       await TrackPlayerService.play();
 
-      set({
-        currentTrack: track,
-        isPlaying: true,
-        isArtworkLoaded: false,
-        isVisible: true,
-      });
+      // Only set isVisible here since other states will be updated by PlaybackService events
+      set({ isVisible: true });
     } catch (error) {
       console.error('Error playing track:', error);
     }
@@ -153,6 +152,19 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       // State will be updated by the PlaybackTrackChanged event listener
     } catch (error) {
       console.error('Error playing previous track:', error);
+    }
+  },
+  toggleRepeatMode: async () => {
+    try {
+      const { repeatMode } = get();
+      const newMode = repeatMode === RepeatMode.Off
+        ? RepeatMode.Queue
+        : RepeatMode.Off;
+
+      await TrackPlayer.setRepeatMode(newMode);
+      set({ repeatMode: newMode });
+    } catch (error) {
+      console.error('Error toggling repeat mode:', error);
     }
   },
 }));

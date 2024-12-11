@@ -2,14 +2,14 @@ import TrackPlayer, { Event, State } from 'react-native-track-player';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
 export async function PlaybackService() {
-  // Existing event listeners
+  // Remote control events
   TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
   TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause());
   TrackPlayer.addEventListener(Event.RemoteStop, () => TrackPlayer.stop());
   TrackPlayer.addEventListener(Event.RemoteNext, () => TrackPlayer.skipToNext());
   TrackPlayer.addEventListener(Event.RemotePrevious, () => TrackPlayer.skipToPrevious());
 
-  // Add track change listeners
+  // Track change event
   TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (event) => {
     if (event.nextTrack !== null) {
       const track = await TrackPlayer.getTrack(event.nextTrack);
@@ -22,13 +22,27 @@ export async function PlaybackService() {
           duration: track.duration?.toString() || '--:--',
           audioUrl: track.url as string,
         });
+        usePlayerStore.getState().setIsArtworkLoaded(false);
       }
     }
   });
 
-  // Add playback state listener
+  // Playback state events
   TrackPlayer.addEventListener(Event.PlaybackState, (event) => {
     const isPlaying = event.state === State.Playing;
     usePlayerStore.getState().setIsPlaying(isPlaying);
+  });
+
+  // Error handling
+  TrackPlayer.addEventListener(Event.PlaybackError, (error) => {
+    console.error('Playback error:', error);
+    usePlayerStore.getState().setIsPlaying(false);
+  });
+
+  // Queue ended event
+  TrackPlayer.addEventListener(Event.PlaybackQueueEnded, (event) => {
+    if (event.track !== null) {
+      usePlayerStore.getState().setIsPlaying(false);
+    }
   });
 }
