@@ -25,7 +25,8 @@ export function useImageColor(imageUrl?: any) {
         dominantColor = colors.background;
       }
 
-      return dominantColor;
+      // Add opacity to make the color darker for better text contrast
+      return dominantColor + 'EE'; // 93% opacity
     } catch (error) {
       console.error('Error extracting color:', error);
       return theme.colors.accent;

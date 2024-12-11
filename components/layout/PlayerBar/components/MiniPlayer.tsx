@@ -102,6 +102,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Add subtle dark overlay
+    borderRadius: 50,
   },
   songInfo: {
     flexDirection: 'row',

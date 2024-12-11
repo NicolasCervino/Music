@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { StyleSheet } from 'react-native';
 import { Track } from '@/entities';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/theme';
 
 type TrackBannerProps = {
   track: Track;
@@ -12,6 +13,8 @@ type TrackBannerProps = {
 };
 
 export function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
+  const { theme } = useTheme();
+
   return (
     <TouchableOpacity
       activeOpacity={0.5}
@@ -29,21 +32,21 @@ export function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
           <Ionicons
             name="musical-note"
             size={24}
-            color={isActive ? '#0A84FF' : 'rgba(255, 255, 255, 0.7)'}
+            color={isActive ? theme.colors.primary : 'rgba(255, 255, 255, 0.7)'}
           />
         </View>
       )}
       <View style={styles.songInfo}>
         <Text
           variant="subtitle"
-          style={[styles.title, isActive && styles.activeText]}
+          style={[styles.title, isActive && { color: theme.colors.primary }]}
           numberOfLines={1}
         >
           {track.title}
         </Text>
         <Text
           variant="caption"
-          style={[styles.artist, isActive && styles.activeText]}
+          style={[styles.artist, isActive && { color: theme.colors.primary }]}
           numberOfLines={1}
         >
           {track.artist}
@@ -51,7 +54,7 @@ export function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
       </View>
       <Text
         variant="caption"
-        style={[styles.duration, isActive && styles.activeText]}
+        style={[styles.duration, isActive && { color: theme.colors.primary }]}
         numberOfLines={1}
       >
         {track.duration}
@@ -92,6 +95,5 @@ const styles = StyleSheet.create({
   },
   activeText: {
     opacity: 1,
-    color: '#0A84FF',
   },
 });

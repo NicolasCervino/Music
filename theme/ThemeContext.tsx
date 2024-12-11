@@ -1,45 +1,50 @@
 import { createContext, useEffect, useState } from 'react';
 import { COLORS } from '@/constants';
 import { useColorScheme } from 'react-native';
-import { ThemeColors } from '@/constants/Colors';
+import { ColorScheme, ThemeColors, ThemeVariant } from '@/constants/Colors';
 
 type Theme = {
   dark: boolean;
   colors: ThemeColors;
-};
-
-const lightTheme: Theme = {
-  dark: false,
-  colors: COLORS.light,
-};
-
-const darkTheme: Theme = {
-  dark: true,
-  colors: COLORS.dark,
+  variant: ThemeVariant;
 };
 
 type ThemeContextType = {
   theme: Theme;
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
+  setThemeVariant: (variant: ThemeVariant) => void;
 };
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const colorScheme = useColorScheme();
-  const [theme, setTheme] = useState<Theme>(colorScheme === 'dark' ? darkTheme : lightTheme);
+  const [currentVariant, setCurrentVariant] = useState<ThemeVariant>('mintFresh');
+
+  const getTheme = (scheme: ColorScheme, variant: ThemeVariant): Theme => ({
+    dark: scheme === 'dark',
+    colors: COLORS[variant][scheme],
+    variant,
+  });
+
+  const [theme, setTheme] = useState<Theme>(
+    getTheme(colorScheme ?? 'light', currentVariant)
+  );
 
   useEffect(() => {
-    setTheme(colorScheme === 'dark' ? darkTheme : lightTheme);
-  }, [colorScheme]);
+    setTheme(getTheme(colorScheme ?? 'light', currentVariant));
+  }, [colorScheme, currentVariant]);
 
   const toggleTheme = () => {
-    setTheme(theme.dark ? lightTheme : darkTheme);
+    setTheme(getTheme(theme.dark ? 'light' : 'dark', currentVariant));
+  };
+
+  const setThemeVariant = (variant: ThemeVariant) => {
+    setCurrentVariant(variant);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setThemeVariant }}>
       {children}
     </ThemeContext.Provider>
   );
