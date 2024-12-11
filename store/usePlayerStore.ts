@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Track } from '@/entities';
 import { MusicMetadataService } from '@/services/MusicMetadataService';
 import { TrackPlayerService } from '@/services/TrackPlayerService';
+import TrackPlayer from 'react-native-track-player';
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -39,8 +40,44 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
 
   // Actions
   loadSongs: async () => {
-    const tracks = await MusicMetadataService.getSampleTracks();
-    set({ songs: tracks });
+    try {
+      const tracks = await MusicMetadataService.getSampleTracks();
+      await TrackPlayerService.setupPlayer();
+
+      const tracksWithDuration = [];
+      // Process tracks sequentially instead of using Promise.all
+      for (const track of tracks) {
+        try {
+          await TrackPlayer.reset();
+          await TrackPlayer.add({
+            id: track.id,
+            url: track.audioUrl,
+            title: track.title,
+            artist: track.artist,
+          });
+
+          // Give more time for the track to load properly
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          const progress = await TrackPlayer.getProgress();
+
+          const minutes = Math.floor(progress.duration / 60);
+          const seconds = Math.floor(progress.duration % 60);
+          const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+          tracksWithDuration.push({ ...track, duration: formattedDuration });
+        } catch (error) {
+          console.error(`Error getting duration for track ${track.title}:`, error);
+          tracksWithDuration.push(track);
+        }
+      }
+
+      await TrackPlayer.reset();
+      set({ songs: tracksWithDuration });
+    } catch (error) {
+      console.error('Error loading songs:', error);
+      set({ songs: [] });
+    }
   },
   setIsVisible: (visible) => set({ isVisible: visible }),
   setCurrentTrack: (track) => set({ currentTrack: track }),

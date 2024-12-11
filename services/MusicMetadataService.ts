@@ -23,7 +23,7 @@ export class MusicMetadataService {
         title: metadata.title || fileUri,
         artist: metadata.artist || 'Unknown Artist',
         artwork: metadata.picture ? `data:image/jpeg;base64,${metadata.picture}` : undefined,
-        duration: metadata.duration || '0:00',
+        duration: '--:--',
         audioUrl: asset.localUri! // Changed from asset.uri to asset.localUri
       };
     } catch (error) {
