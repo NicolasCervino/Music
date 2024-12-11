@@ -36,12 +36,22 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
       ]}
     >
       <View style={styles.contentContainer}>
-        <Image
-          source={{ uri: currentTrack.artwork }}
-          style={styles.artwork}
-          contentFit="cover"
-          onLoad={handleArtworkLoad}
-        />
+        {currentTrack.artwork ? (
+          <Image
+            source={{ uri: currentTrack.artwork }}
+            style={styles.artwork}
+            contentFit="cover"
+            onLoad={handleArtworkLoad}
+          />
+        ) : (
+          <View style={[styles.artwork, styles.placeholderArtwork]}>
+            <Ionicons
+              name="musical-note"
+              size={64}
+              color="rgba(255, 255, 255, 0.7)"
+            />
+          </View>
+        )}
 
         <View style={styles.songInfo}>
           <Text style={styles.title}>{currentTrack.title}</Text>
@@ -93,6 +103,12 @@ export const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 8,
     marginVertical: 32,
+  },
+  placeholderArtwork: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
   },
   songInfo: {
     marginBottom: 32,

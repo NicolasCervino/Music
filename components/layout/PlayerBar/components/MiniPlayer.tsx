@@ -44,12 +44,22 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
       <View style={[styles.content]}>
         {/* Song info */}
         <View style={styles.songInfo}>
-          <Image
-            source={{ uri: currentTrack?.artwork ?? '' }}
-            style={styles.artwork}
-            contentFit="cover"
-            onLoad={handleArtworkLoad}
-          />
+          {currentTrack?.artwork ? (
+            <Image
+              source={{ uri: currentTrack.artwork }}
+              style={styles.artwork}
+              contentFit="cover"
+              onLoad={handleArtworkLoad}
+            />
+          ) : (
+            <View style={[styles.artwork, styles.placeholderArtwork]}>
+              <Ionicons
+                name="musical-note"
+                size={20}
+                color="rgba(255, 255, 255, 0.7)"
+              />
+            </View>
+          )}
           <View>
             <Text variant="caption" style={styles.title}>
               {currentTrack?.title ?? ''}
@@ -101,6 +111,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 4,
+  },
+  placeholderArtwork: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 50,
   },
   title: {
     color: '#FFFFFF',
