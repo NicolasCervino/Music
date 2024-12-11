@@ -18,7 +18,9 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
     handleArtworkLoad,
     isPlaying,
     pauseTrack,
-    resumeTrack
+    resumeTrack,
+    nextTrack,
+    previousTrack
   } = usePlayer();
 
   const handlePlayPause = () => {
@@ -72,13 +74,13 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
 
         {/* Controls */}
         <View style={styles.controls}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={previousTrack}>
             <Ionicons name="play-skip-back" size={20} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handlePlayPause}>
             <Ionicons name={isPlaying ? "pause" : "play"} size={20} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={nextTrack}>
             <Ionicons name="play-skip-forward" size={20} color="white" />
           </TouchableOpacity>
         </View>

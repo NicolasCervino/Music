@@ -24,11 +24,13 @@ interface PlayerActions {
   pauseTrack: () => void;
   resumeTrack: () => void;
   stopTrack: () => void;
+  nextTrack: () => void;
+  previousTrack: () => void;
   setIsVisible: (visible: boolean) => void;
   loadSongs: () => Promise<void>;
 }
 
-export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
+export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => ({
   // Initial state
   currentTrack: null,
   isPlaying: false,
@@ -88,9 +90,13 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
 
   playTrack: async (track) => {
     try {
-      await TrackPlayerService.stop(); // Reset previous track
-      await TrackPlayerService.addTrack(track);
+      const { songs } = get();
+      const trackIndex = songs.findIndex(t => t.id === track.id);
+
+      await TrackPlayerService.stop();
+      await TrackPlayerService.addToQueue(songs, trackIndex);
       await TrackPlayerService.play();
+
       set({
         currentTrack: track,
         isPlaying: true,
@@ -130,6 +136,23 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
       });
     } catch (error) {
       console.error('Error stopping track:', error);
+    }
+  },
+  nextTrack: async () => {
+    try {
+      await TrackPlayerService.skipToNext();
+      // State will be updated by the PlaybackTrackChanged event listener
+    } catch (error) {
+      console.error('Error playing next track:', error);
+    }
+  },
+
+  previousTrack: async () => {
+    try {
+      await TrackPlayerService.skipToPrevious();
+      // State will be updated by the PlaybackTrackChanged event listener
+    } catch (error) {
+      console.error('Error playing previous track:', error);
     }
   },
 }));

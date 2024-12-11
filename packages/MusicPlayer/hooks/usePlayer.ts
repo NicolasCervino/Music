@@ -17,6 +17,8 @@ export function usePlayer() {
     resumeTrack,
     stopTrack,
     setIsExpanded,
+    nextTrack,
+    previousTrack
   } = usePlayerStore();
 
   const { backgroundColor, onLoad, isLoading } = useImageColor(currentTrack?.artwork);
@@ -67,5 +69,7 @@ export function usePlayer() {
     resumeTrack,
     stopTrack,
     setIsExpanded,
+    nextTrack,
+    previousTrack
   };
 }

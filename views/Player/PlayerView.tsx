@@ -19,6 +19,8 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
     pauseTrack,
     resumeTrack,
     isExpanded,
+    nextTrack,
+    previousTrack
   } = usePlayer();
 
   if (!currentTrack) return null;
@@ -63,7 +65,7 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
             <Ionicons name="shuffle" size={24} color="white" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton}>
+          <TouchableOpacity style={styles.controlButton} onPress={previousTrack}>
             <Ionicons name="play-skip-back" size={24} color="white" />
           </TouchableOpacity>
 
@@ -74,7 +76,7 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
             <Ionicons name={isPlaying ? "pause" : "play"} size={32} color="black" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton}>
+          <TouchableOpacity style={styles.controlButton} onPress={nextTrack}>
             <Ionicons name="play-skip-forward" size={24} color="white" />
           </TouchableOpacity>
 

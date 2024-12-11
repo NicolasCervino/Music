@@ -1,6 +1,7 @@
 import TrackPlayer, { AppKilledPlaybackBehavior, Capability, Event, RepeatMode } from 'react-native-track-player';
 import { Track } from '@/entities';
 import { PlaybackService } from './PlaybackService';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 export class TrackPlayerService {
   private static isInitialized = false;
@@ -95,6 +96,63 @@ export class TrackPlayerService {
       await TrackPlayer.reset();
     } catch (error) {
       console.error('Error stopping track:', error);
+    }
+  }
+
+  static async addToQueue(tracks: Track[], startIndex: number = 0) {
+    try {
+      if (!this.isInitialized) {
+        await this.setupPlayer();
+      }
+
+      await TrackPlayer.reset();
+
+      const queue = tracks.map(track => ({
+        id: track.id,
+        url: track.audioUrl,
+        title: track.title,
+        artist: track.artist,
+        artwork: track.artwork,
+        duration: parseInt(track.duration) || 0,
+      }));
+
+      await TrackPlayer.add(queue);
+      await TrackPlayer.skip(startIndex);
+
+      // Get the current track after skipping
+      const currentTrack = await TrackPlayer.getCurrentTrack();
+      if (currentTrack !== null) {
+        const trackData = await TrackPlayer.getTrack(currentTrack);
+        if (trackData) {
+          usePlayerStore.getState().setCurrentTrack({
+            id: trackData.id as string,
+            title: trackData.title as string,
+            artist: trackData.artist as string,
+            artwork: trackData.artwork as string,
+            duration: trackData.duration?.toString() || '--:--',
+            audioUrl: trackData.url as string,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error adding tracks to queue:', error);
+      throw error;
+    }
+  }
+
+  static async skipToNext() {
+    try {
+      await TrackPlayer.skipToNext();
+    } catch (error) {
+      console.error('Error skipping to next track:', error);
+    }
+  }
+
+  static async skipToPrevious() {
+    try {
+      await TrackPlayer.skipToPrevious();
+    } catch (error) {
+      console.error('Error skipping to previous track:', error);
     }
   }
 } 
