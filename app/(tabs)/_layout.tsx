@@ -3,6 +3,7 @@ import ExpandablePlayerBar from '@/components/layout/PlayerBar/ExpandablePlayerB
 import TabBar from '@/components/layout/TabBar/TabBar';
 import TabContent from '@/components/layout/TabBar/TabContent';
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
+import { usePlayerStore } from '@/store/usePlayerStore';
 import { useTheme } from '@/theme';
 import { useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -14,6 +15,10 @@ export default function Layout() {
   const { isPlayerReady, isExpanded, artworkColor, isVisible } = usePlayer();
   const { theme } = useTheme();
   const navigation = useNavigation();
+
+  useEffect(() => {
+    usePlayerStore.getState().loadSongs();
+  }, []);
 
   const statusBarStyle = isExpanded && isPlayerReady
     ? 'light'

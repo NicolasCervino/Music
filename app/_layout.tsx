@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/theme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { TrackPlayerService } from '@/services/TrackPlayerService';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -14,6 +15,26 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initializePlayer = async () => {
+      try {
+        await TrackPlayerService.setupPlayer();
+      } catch (error) {
+        console.error('Error initializing player:', error);
+      }
+    };
+
+    if (mounted) {
+      initializePlayer();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (loaded) {

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Track } from '@/entities';
-import { SAMPLE_SONGS } from '@/packages/Songs/sample';
+import { MusicMetadataService } from '@/services/MusicMetadataService';
+import { TrackPlayerService } from '@/services/TrackPlayerService';
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -23,6 +24,7 @@ interface PlayerActions {
   resumeTrack: () => void;
   stopTrack: () => void;
   setIsVisible: (visible: boolean) => void;
+  loadSongs: () => Promise<void>;
 }
 
 export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
@@ -33,9 +35,13 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
   isArtworkLoaded: false,
   isExpanded: false,
   isVisible: false,
-  songs: SAMPLE_SONGS,
+  songs: [],
 
   // Actions
+  loadSongs: async () => {
+    const tracks = await MusicMetadataService.getSampleTracks();
+    set({ songs: tracks });
+  },
   setIsVisible: (visible) => set({ isVisible: visible }),
   setCurrentTrack: (track) => set({ currentTrack: track }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
@@ -43,17 +49,50 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set) => ({
   setIsArtworkLoaded: (loaded) => set({ isArtworkLoaded: loaded }),
   setIsExpanded: (expanded) => set({ isExpanded: expanded }),
 
-  playTrack: (track) => set({
-    currentTrack: track,
-    isPlaying: true,
-    isArtworkLoaded: false,
-    isVisible: true,
-  }),
-  pauseTrack: () => set({ isPlaying: false }),
-  resumeTrack: () => set({ isPlaying: true }),
-  stopTrack: () => set({
-    isPlaying: false,
-    currentTrack: null,
-    isVisible: false
-  }),
+  playTrack: async (track) => {
+    try {
+      await TrackPlayerService.stop(); // Reset previous track
+      await TrackPlayerService.addTrack(track);
+      await TrackPlayerService.play();
+      set({
+        currentTrack: track,
+        isPlaying: true,
+        isArtworkLoaded: false,
+        isVisible: true,
+      });
+    } catch (error) {
+      console.error('Error playing track:', error);
+    }
+  },
+
+  pauseTrack: async () => {
+    try {
+      await TrackPlayerService.pause();
+      set({ isPlaying: false });
+    } catch (error) {
+      console.error('Error pausing track:', error);
+    }
+  },
+
+  resumeTrack: async () => {
+    try {
+      await TrackPlayerService.play();
+      set({ isPlaying: true });
+    } catch (error) {
+      console.error('Error resuming track:', error);
+    }
+  },
+
+  stopTrack: async () => {
+    try {
+      await TrackPlayerService.stop();
+      set({
+        isPlaying: false,
+        currentTrack: null,
+        isVisible: false,
+      });
+    } catch (error) {
+      console.error('Error stopping track:', error);
+    }
+  },
 }));

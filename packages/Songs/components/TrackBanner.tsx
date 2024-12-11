@@ -3,6 +3,7 @@ import { Text } from '@/components/atoms';
 import { Image } from 'expo-image';
 import { StyleSheet } from 'react-native';
 import { Track } from '@/entities';
+import { Ionicons } from '@expo/vector-icons';
 
 type TrackBannerProps = {
   track: Track;
@@ -14,14 +15,24 @@ export function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
   return (
     <TouchableOpacity
       activeOpacity={0.5}
-      style={[styles.trackItem, isActive && styles.activeTrack]}
+      style={[styles.trackItem]}
       onPress={onPress}
     >
-      <Image
-        source={{ uri: track.artwork }}
-        style={styles.artwork}
-        contentFit="cover"
-      />
+      {track.artwork ? (
+        <Image
+          source={{ uri: track.artwork }}
+          style={styles.artwork}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={[styles.artwork, styles.placeholderArtwork]}>
+          <Ionicons
+            name="musical-note"
+            size={24}
+            color={isActive ? '#0A84FF' : 'rgba(255, 255, 255, 0.7)'}
+          />
+        </View>
+      )}
       <View style={styles.songInfo}>
         <Text
           variant="subtitle"
@@ -61,6 +72,11 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 4,
   },
+  placeholderArtwork: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   songInfo: {
     flex: 1,
   },
@@ -73,10 +89,6 @@ const styles = StyleSheet.create({
   duration: {
     opacity: 0.7,
     marginRight: 8,
-  },
-  activeTrack: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
   },
   activeText: {
     opacity: 1,
