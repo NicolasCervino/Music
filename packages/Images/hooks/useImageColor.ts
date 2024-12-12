@@ -10,11 +10,20 @@ export function useImageColor(imageUrl?: any) {
   const [isLoading, setIsLoading] = useState(false);
   const lastProcessedUrl = useRef<string>();
 
+  const generateCacheKey = (uri: string): string => {
+    // Create a shorter unique key from the last part of the URI
+    const parts = uri.split('/');
+    const fileName = parts[parts.length - 1];
+    return `img_${fileName.replace(/[^a-zA-Z0-9]/g, '')}`; // Remove special characters
+  };
+
   const extractColor = async (uri: string) => {
     try {
+      const cacheKey = generateCacheKey(uri);
       const colors = await getColors(uri, {
         fallback: theme.colors.accent,
         cache: true,
+        key: cacheKey,
         quality: 'low',
       });
 
@@ -25,8 +34,7 @@ export function useImageColor(imageUrl?: any) {
         dominantColor = colors.background;
       }
 
-      // Add opacity to make the color darker for better text contrast
-      return dominantColor + 'EE'; // 93% opacity
+      return dominantColor + 'EE';
     } catch (error) {
       console.error('Error extracting color:', error);
       return theme.colors.accent;
@@ -43,7 +51,6 @@ export function useImageColor(imageUrl?: any) {
       ? imageUrl
       : RNImage.resolveAssetSource(imageUrl).uri;
 
-    // Skip if we've already processed this URL
     if (lastProcessedUrl.current === uri) {
       return;
     }

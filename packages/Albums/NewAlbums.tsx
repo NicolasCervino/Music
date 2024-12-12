@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, FlatList } from 'react-native';
 import { Text, SeeAll } from '@/components/atoms';
 import { Image } from 'expo-image';
 
@@ -31,50 +31,50 @@ const SAMPLE_ALBUMS: Album[] = [
 ];
 
 export function NewAlbums() {
+  const renderAlbum = ({ item: album }: { item: Album }) => (
+    <Pressable style={styles.albumCard}>
+      <Image
+        source={{ uri: album.artwork }}
+        style={styles.artwork}
+        contentFit="cover"
+      />
+      <Text variant="subtitle" style={styles.title}>{album.title}</Text>
+      <Text variant="caption" style={styles.artist}>{album.artist}</Text>
+    </Pressable>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text variant="heading">New Albums</Text>
         <SeeAll />
       </View>
-      <ScrollView
+      <FlatList
         horizontal
+        data={SAMPLE_ALBUMS}
+        renderItem={renderAlbum}
+        keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {SAMPLE_ALBUMS.map((album) => (
-          <Pressable key={album.id} style={styles.albumCard}>
-            <Image
-              source={{ uri: album.artwork }}
-              style={styles.artwork}
-              contentFit="cover"
-            />
-            <Text variant="subtitle" style={styles.title}>{album.title}</Text>
-            <Text variant="caption" style={styles.artist}>{album.artist}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
+
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
     marginBottom: 16,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    gap: 16,
   },
   albumCard: {
     width: 150,
+    marginRight: 16,
   },
   artwork: {
     width: 150,

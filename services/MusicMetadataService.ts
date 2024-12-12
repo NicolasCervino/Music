@@ -1,47 +1,70 @@
 import { Track } from '@/entities';
 import { Asset } from 'expo-asset';
-import MusicInfo from 'expo-music-info-2';
+/* import MusicInfo from 'expo-music-info-2'; */
+import { getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
+import * as MediaLibrary from 'expo-media-library';
 
 const AUDIO_ASSETS = {
   'bad-habit.mp3': require('@/assets/audio/bad-habit.mp3'),
   'last-christmas.mp3': require('@/assets/audio/last-christmas.mp3'),
   'smooth-operator.mp3': require('@/assets/audio/smooth-operator.mp3'),
+  'smooth-criminal.mp3': require('@/assets/audio/smooth-criminal.mp3'),
 } as const;
 
 export class MusicMetadataService {
-  static async getTrackMetadata(fileUri: keyof typeof AUDIO_ASSETS): Promise<Track | null> {
-    try {
-      const asset = Asset.fromModule(AUDIO_ASSETS[fileUri]);
-      await asset.downloadAsync();
+  private static PAGE_SIZE = 20;
 
-      // Get metadata using expo-music-info
-      // @ts-ignore - Known type definition issue in expo-music-info-2
-      const metadata = await MusicInfo.getMusicInfoAsync(asset.localUri);
+  private static formatDuration(durationMs: number): string {
+    // Convert to seconds
+    const totalSeconds = Math.floor(durationMs / 1000);
 
-      return {
-        id: fileUri,
-        title: metadata.title || fileUri,
-        artist: metadata.artist || 'Unknown Artist',
-        artwork: metadata.picture ? `data:image/jpeg;base64,${metadata.picture}` : undefined,
-        duration: '--:--',
-        audioUrl: asset.localUri! // Changed from asset.uri to asset.localUri
-      };
-    } catch (error) {
-      console.error('Error extracting metadata:', error);
-      return null;
-    }
+    // Calculate minutes and remaining seconds
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    // Pad seconds with leading zero if needed
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  static async getSampleTracks(): Promise<Track[]> {
-    const audioFiles = Object.keys(AUDIO_ASSETS) as (keyof typeof AUDIO_ASSETS)[];
+  static async getAllTracks(page: number = 0): Promise<{ tracks: Track[], hasMore: boolean }> {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error('Permission not granted');
+      }
 
-    const tracks = await Promise.all(
-      audioFiles.map(async (uri) => {
-        const metadata = await this.getTrackMetadata(uri);
-        return metadata;
-      })
-    );
+      const songsOrError = await getAll({
+        coverQuality: 50,
+        minSongDuration: 1000,
+        sortBy: SortSongFields.TITLE,
+        sortOrder: SortSongOrder.ASC,
+        offset: page * this.PAGE_SIZE,
+        limit: this.PAGE_SIZE,
+      });
 
-    return tracks.filter((track): track is Track => track !== null);
+      if (typeof songsOrError === 'string') {
+        console.error('Error getting music files:', songsOrError);
+        return { tracks: [], hasMore: false };
+      }
+
+      const tracks = songsOrError.map((song): Track => ({
+        id: song.url,
+        title: song.title,
+        album: song.album,
+        artist: song.artist,
+        duration: this.formatDuration(song.duration),
+        genre: song.genre,
+        artwork: song.cover || undefined,
+        audioUrl: song.url
+      }))
+
+      return {
+        tracks,
+        hasMore: tracks.length >= this.PAGE_SIZE
+      };
+    } catch (error) {
+      console.error('Error getting tracks:', error);
+      return { tracks: [], hasMore: false };
+    }
   }
 }

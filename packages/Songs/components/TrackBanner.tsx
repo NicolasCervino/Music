@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native';
 import { Track } from '@/entities';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme';
+import { useEffect } from 'react';
 
 type TrackBannerProps = {
   track: Track;
@@ -68,6 +69,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
+    paddingHorizontal: 16,
     gap: 12,
   },
   artwork: {

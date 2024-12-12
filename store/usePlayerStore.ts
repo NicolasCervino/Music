@@ -13,6 +13,9 @@ interface PlayerState {
   songs: Track[];
   isVisible: boolean;
   repeatMode: RepeatMode;
+  currentPage: number;
+  isLoadingMore: boolean;
+  hasMore: boolean;
 }
 
 interface PlayerActions {
@@ -30,7 +33,23 @@ interface PlayerActions {
   setIsVisible: (visible: boolean) => void;
   loadSongs: () => Promise<void>;
   toggleRepeatMode: () => void;
+  loadMoreSongs: () => Promise<void>;
 }
+
+const EXCLUDED_PATHS = [
+  '/storage/emulated/0/WhatsApp',
+  '/storage/emulated/0/PowerDirector',
+  'storage/emulated/0/bluetooth',
+  '/storage/emulated/0/zedge'
+];
+
+const filterExcludedTracks = (tracks: Track[]): Track[] => {
+  return tracks.filter(track =>
+    !EXCLUDED_PATHS.some(path =>
+      track.audioUrl.toLowerCase().includes(path.toLowerCase())
+    )
+  );
+};
 
 export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => ({
   // Initial state
@@ -42,46 +61,55 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
   isVisible: false,
   songs: [],
   repeatMode: RepeatMode.Off,
+  currentPage: 0,
+  isLoadingMore: false,
+  hasMore: true,
 
   // Actions
   loadSongs: async () => {
     try {
-      const tracks = await MusicMetadataService.getSampleTracks();
+      const { tracks, hasMore } = await MusicMetadataService.getAllTracks(0);
+      const filteredTracks = filterExcludedTracks(tracks);
       await TrackPlayerService.setupPlayer();
 
-      const tracksWithDuration = [];
-      // Process tracks sequentially instead of using Promise.all
-      for (const track of tracks) {
-        try {
-          await TrackPlayer.reset();
-          await TrackPlayer.add({
-            id: track.id,
-            url: track.audioUrl,
-            title: track.title,
-            artist: track.artist,
-          });
-
-          // Give more time for the track to load properly
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          const progress = await TrackPlayer.getProgress();
-
-          const minutes = Math.floor(progress.duration / 60);
-          const seconds = Math.floor(progress.duration % 60);
-          const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-          tracksWithDuration.push({ ...track, duration: formattedDuration });
-        } catch (error) {
-          console.error(`Error getting duration for track ${track.title}:`, error);
-          tracksWithDuration.push(track);
-        }
+      if (filteredTracks.length > 0) {
+        await TrackPlayerService.addToQueue(filteredTracks);
       }
 
-      await TrackPlayer.reset();
-      set({ songs: tracksWithDuration });
+      set({
+        songs: filteredTracks,
+        currentPage: 0,
+        hasMore
+      });
     } catch (error) {
       console.error('Error loading songs:', error);
-      set({ songs: [] });
+      set({ songs: [], hasMore: false });
+    }
+  },
+  loadMoreSongs: async () => {
+    const { currentPage, isLoadingMore, hasMore, songs } = get();
+
+    if (isLoadingMore || !hasMore) return;
+
+    try {
+      set({ isLoadingMore: true });
+      const nextPage = currentPage + 1;
+      const { tracks, hasMore: moreAvailable } = await MusicMetadataService.getAllTracks(nextPage);
+      const filteredTracks = filterExcludedTracks(tracks);
+
+      if (filteredTracks.length > 0) {
+        await TrackPlayerService.addToQueue(filteredTracks);
+      }
+
+      set({
+        songs: [...songs, ...filteredTracks],
+        currentPage: nextPage,
+        hasMore: moreAvailable,
+        isLoadingMore: false
+      });
+    } catch (error) {
+      console.error('Error loading more songs:', error);
+      set({ isLoadingMore: false });
     }
   },
   setIsVisible: (visible) => set({ isVisible: visible }),

@@ -1,5 +1,5 @@
 import { useTheme } from "@/theme";
-import { View, ScrollView, Pressable } from "react-native";
+import { View, ScrollView, Pressable, StyleSheet } from "react-native";
 import { Text } from "@/components/atoms";
 import { Image } from "expo-image";
 import { SAMPLE_ALBUMS } from "@/packages/Albums/sample";
@@ -10,16 +10,13 @@ import { SongList } from "@/packages/Songs/SongList";
 export default function HomeView() {
   const { theme } = useTheme();
 
+  const renderHeader = () => (
+    <NewAlbums />
+  );
+
   return (
-    <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.background,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <NewAlbums />
-      <SongList />
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <SongList ListHeaderComponent={renderHeader} />
+    </View>
   );
 }

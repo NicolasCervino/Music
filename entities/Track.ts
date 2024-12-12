@@ -1,8 +1,10 @@
 export type Track = {
   id: string;
   title: string;
+  album: string;
   artist: string;
-  artwork: string | undefined;
   duration: string;
+  genre: string;
+  artwork: string | undefined;
   audioUrl: string;
 };
