@@ -1,22 +1,25 @@
-import { useTheme } from "@/theme";
-import { View, ScrollView, Pressable, StyleSheet } from "react-native";
-import { Text } from "@/components/atoms";
-import { Image } from "expo-image";
-import { SAMPLE_ALBUMS } from "@/packages/Albums/sample";
-import { SAMPLE_SONGS } from "@/packages/Songs/sample";
 import { NewAlbums } from "@/packages/Albums/NewAlbums";
 import { SongList } from "@/packages/Songs/SongList";
+import { useTheme } from "@/theme";
+import { memo, useCallback } from "react";
+import { StyleSheet, View } from "react-native";
+
+const Header = memo(() => <NewAlbums />);
 
 export default function HomeView() {
   const { theme } = useTheme();
 
-  const renderHeader = () => (
-    <NewAlbums />
-  );
+   const renderHeader = useCallback(() => <Header />, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SongList ListHeaderComponent={renderHeader} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

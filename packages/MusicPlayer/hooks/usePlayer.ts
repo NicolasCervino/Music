@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { usePlayerStore } from '@/store/usePlayerStore';
 import { useImageColor } from '@/packages/Images/hooks/useImageColor';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { useCallback, useEffect, useRef } from 'react';
 
 export function usePlayer() {
   const {
@@ -23,7 +23,7 @@ export function usePlayer() {
     toggleRepeatMode
   } = usePlayerStore();
 
-  const { backgroundColor, onLoad, isLoading } = useImageColor(currentTrack?.artwork);
+  const { backgroundColor, onLoad, isLoading } = useImageColor(currentTrack?.artwork, currentTrack?.id);
   const loadingRef = useRef(false);
 
   const handleArtworkLoad = useCallback(async () => {

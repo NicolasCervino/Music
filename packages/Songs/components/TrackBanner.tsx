@@ -1,11 +1,10 @@
-import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/atoms';
-import { Image } from 'expo-image';
-import { StyleSheet } from 'react-native';
 import { Track } from '@/entities';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme';
-import { useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import React from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 type TrackBannerProps = {
   track: Track;
@@ -13,7 +12,7 @@ type TrackBannerProps = {
   onPress: () => void;
 };
 
-export function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
+export const TrackBanner = React.memo(function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
   const { theme } = useTheme();
 
   return (
@@ -62,7 +61,7 @@ export function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
       </Text>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   trackItem: {

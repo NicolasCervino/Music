@@ -1,16 +1,18 @@
-import { View, FlatList } from 'react-native';
-import { Text, SeeAll } from '@/components/atoms';
-import { StyleSheet } from 'react-native';
-import { usePlayerStore } from '@/store/usePlayerStore';
-import { TrackBanner } from './components/TrackBanner';
-import { Track } from '@/entities';
+import { SeeAll, Text } from '@/components/atoms';
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
+import { Track } from '@/entities';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { useCallback, useMemo } from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { TrackBanner } from './components/TrackBanner';
+
+const ITEM_HEIGHT = 76;
 
 export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.ComponentType<any> }) {
   const { songs, playTrack, currentTrack, loadMoreSongs, isLoadingMore, hasMore, isVisible } = usePlayerStore();
   const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
 
-  const renderItem = ({ item: track }: { item: Track }) => (
+  const renderItem = useCallback(({ item: track }: { item: Track }) => (
     <TrackBanner
       track={track}
       isActive={currentTrack?.id === track.id}
@@ -20,9 +22,9 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
         }
       }}
     />
-  );
+  ), [currentTrack?.id, playTrack]);
 
-  const renderFooter = () => {
+   const renderFooter = useCallback(() => {
     if (isLoadingMore) {
       return (
         <View style={styles.footer}>
@@ -38,29 +40,49 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
       );
     }
     return null;
-  };
+  }, [isLoadingMore, hasMore, songs.length]);
+
+   const keyExtractor = useCallback((item: Track) => item.id, []);
+
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: ITEM_HEIGHT,
+    offset: ITEM_HEIGHT * index,
+    index,
+  }), []);
+
+   const ListHeader = useMemo(() => (
+    <View style={styles.listContent}>
+      {ListHeaderComponent && <ListHeaderComponent />}
+      <View style={styles.sectionHeader}>
+        <Text variant="heading">Song List</Text>
+        <SeeAll />
+      </View>
+    </View>
+  ), [ListHeaderComponent]);
+
+  const containerStyle = useMemo(() => (
+    [styles.container, { paddingBottom: listPadding }]
+  ), [listPadding]);
 
   return (
-    <View style={[styles.container, { paddingBottom: listPadding }]}>
+    <View style={containerStyle}>
       <FlatList
-        ListHeaderComponent={
-          <View style={styles.listContent}>
-            {ListHeaderComponent && <ListHeaderComponent />}
-            <View style={styles.sectionHeader}>
-              <Text variant="heading">Song List</Text>
-              <SeeAll />
-            </View>
-          </View>
-        }
+        ListHeaderComponent={ListHeader}
         ListHeaderComponentStyle={styles.listContent}
         data={songs}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
+        getItemLayout={getItemLayout}
         onEndReached={loadMoreSongs}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={5}
       />
     </View>
   );

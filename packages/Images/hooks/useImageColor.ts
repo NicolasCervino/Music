@@ -1,29 +1,29 @@
-import { useCallback, useState, useRef } from 'react';
+import { ColorCacheService } from '@/services/CacheColorService';
 import { useTheme } from '@/theme';
-import { ensureColorContrast } from '../utils/utils';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image as RNImage } from 'react-native';
 import { getColors } from 'react-native-image-colors';
+import { ensureColorContrast } from '../utils/utils';
 
-export function useImageColor(imageUrl?: any) {
+export function useImageColor(imageUrl?: any, trackId?: string) {
   const { theme } = useTheme();
   const [backgroundColor, setBackgroundColor] = useState(theme.colors.accent);
   const [isLoading, setIsLoading] = useState(false);
   const lastProcessedUrl = useRef<string>();
 
-  const generateCacheKey = (uri: string): string => {
-    // Create a shorter unique key from the last part of the URI
-    const parts = uri.split('/');
-    const fileName = parts[parts.length - 1];
-    return `img_${fileName.replace(/[^a-zA-Z0-9]/g, '')}`; // Remove special characters
-  };
-
-  const extractColor = async (uri: string) => {
+ const extractColor = async (uri: string) => {
     try {
-      const cacheKey = generateCacheKey(uri);
+      // First, check if we have a cached color for this track
+      if (trackId) {
+        const cachedColor = await ColorCacheService.getStoredColor(trackId);
+        if (cachedColor) {
+          return cachedColor;
+        }
+      }
+
       const colors = await getColors(uri, {
         fallback: theme.colors.accent,
-        cache: true,
-        key: cacheKey,
+       cache: false,
         quality: 'low',
       });
 
@@ -34,7 +34,14 @@ export function useImageColor(imageUrl?: any) {
         dominantColor = colors.background;
       }
 
-      return dominantColor + 'EE';
+      const finalColor = dominantColor + 'EE';
+
+      // Store the extracted color in cache
+      if (trackId) {
+        await ColorCacheService.storeColor(trackId, finalColor);
+      }
+
+      return finalColor;
     } catch (error) {
       console.error('Error extracting color:', error);
       return theme.colors.accent;
@@ -67,7 +74,17 @@ export function useImageColor(imageUrl?: any) {
     } finally {
       setIsLoading(false);
     }
-  }, [imageUrl, theme.colors.accent]);
+  }, [imageUrl, trackId, theme.colors.accent]);
+
+   useEffect(() => {
+    if (trackId) {
+      ColorCacheService.getStoredColor(trackId).then(cachedColor => {
+        if (cachedColor) {
+          setBackgroundColor(ensureColorContrast(cachedColor));
+        }
+      });
+    }
+  }, [trackId]);
 
   return {
     backgroundColor,

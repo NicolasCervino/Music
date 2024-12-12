@@ -1,5 +1,5 @@
-import TrackPlayer, { Event, State } from 'react-native-track-player';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import TrackPlayer, { Event, State } from 'react-native-track-player';
 
 export async function PlaybackService() {
   // Remote control events
@@ -14,15 +14,23 @@ export async function PlaybackService() {
     if (event.nextTrack !== null) {
       const track = await TrackPlayer.getTrack(event.nextTrack);
       if (track) {
-        usePlayerStore.getState().setCurrentTrack({
+        const playerStore = usePlayerStore.getState();
+        // Set the new track with all required properties
+        playerStore.setCurrentTrack({
           id: track.id as string,
           title: track.title as string,
           artist: track.artist as string,
           artwork: track.artwork as string,
           duration: track.duration?.toString() || '--:--',
           audioUrl: track.url as string,
+          album: track.album as string || 'Unknown Album',  // Add this
+          genre: track.genre as string || 'Unknown Genre'   // Add this
         });
-        usePlayerStore.getState().setIsArtworkLoaded(false);
+      
+        // Only reset artwork loaded state if the artwork URL actually changed
+        if (track.artwork !== playerStore.currentTrack?.artwork) {
+          playerStore.setIsArtworkLoaded(false);
+        }
       }
     }
   });
