@@ -5,7 +5,7 @@ import { Image } from 'expo-image'
 import { Text } from '@/components/atoms'
 import { View, StyleSheet } from 'react-native'
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer'
-import { PLAYER_BAR_HEIGHT } from '../constants'
+import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions'
 
 type MiniPlayerProps = {
   onPress: () => void;

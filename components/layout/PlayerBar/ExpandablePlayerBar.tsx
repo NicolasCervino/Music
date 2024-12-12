@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { useCallback, useRef, useState } from 'react';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
-import { PLAYER_BAR_HEIGHT } from './constants';
+import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import PlayerTransition from "./components/PlayerTransition";
 import { useTheme } from "@/theme";
 import { styles } from "./ExpandableBarStyle";

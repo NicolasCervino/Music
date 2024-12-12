@@ -1,6 +1,6 @@
 import { useAnimatedReaction, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useRef } from 'react';
-import { PLAYER_BAR_HEIGHT } from '../constants';
+import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 
 export function usePlayerBarAnimation(
   artworkColor: string,
