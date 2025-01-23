@@ -1,11 +1,10 @@
-import { Ionicons } from '@expo/vector-icons'
-import React, { useState } from 'react'
-import { TouchableOpacity } from 'react-native'
-import { Image } from 'expo-image'
-import { Text } from '@/components/atoms'
-import { View, StyleSheet } from 'react-native'
-import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer'
+import { MarqueeText } from '@/components/atoms/MarqueeText/MarqueeText'
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions'
+import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer'
+import { Ionicons } from '@expo/vector-icons'
+import { Image } from 'expo-image'
+import React from 'react'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 
 type MiniPlayerProps = {
   onPress: () => void;
@@ -63,12 +62,22 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
             </View>
           )}
           <View>
-            <Text variant="caption" style={styles.title}>
-              {currentTrack?.title ?? ''}
-            </Text>
-            <Text variant="caption" style={styles.artist}>
-              {currentTrack?.artist ?? ''}
-            </Text>
+            <MarqueeText
+              text={currentTrack?.title ?? ''}
+              style={{ width: 150 }}
+              textStyle={styles.title}
+              variant="caption"
+              speed={0.3}
+              spacing={45}
+            />
+            <MarqueeText
+              text={currentTrack?.artist ?? ''}
+              style={{ width: 150 }}
+              textStyle={styles.artist}
+              variant="caption"
+              speed={0.3}
+              spacing={45}
+            />
           </View>
         </View>
 
