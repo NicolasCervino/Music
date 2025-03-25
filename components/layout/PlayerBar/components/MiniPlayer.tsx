@@ -3,7 +3,7 @@ import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions'
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 
 type MiniPlayerProps = {
@@ -11,6 +11,7 @@ type MiniPlayerProps = {
   backgroundColor: string;
   isReady: boolean;
 }
+
 function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
   const {
     currentTrack,
@@ -22,12 +23,27 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
     previousTrack
   } = usePlayer();
 
+  // Trigger artwork load whenever track changes
+  useEffect(() => {
+    if (currentTrack?.artwork) {
+      handleArtworkLoad();
+    }
+  }, [currentTrack?.id, handleArtworkLoad]);
+
   const handlePlayPause = () => {
     if (isPlaying) {
       pauseTrack();
     } else {
       resumeTrack();
     }
+  };
+
+  const handleNext = async () => {
+    await nextTrack();
+  };
+
+  const handlePrevious = async () => {
+    await previousTrack();
   };
 
   return (
@@ -42,27 +58,23 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
         }
       ]}
     >
-      <View style={[styles.content]}>
-        {/* Song info */}
+      <View style={styles.content}>
         <View style={styles.songInfo}>
           {currentTrack?.artwork ? (
             <Image
               source={{ uri: currentTrack.artwork }}
               style={styles.artwork}
               contentFit="cover"
+              transition={200}
               onLoad={handleArtworkLoad}
             />
           ) : (
             <View style={[styles.artwork, styles.placeholderArtwork]}>
-              <Ionicons
-                name="musical-note"
-                size={20}
-                color="rgba(255, 255, 255, 0.7)"
-              />
+              <Ionicons name="musical-note" size={20} color="white" />
             </View>
           )}
-          <View>
-            <MarqueeText
+          <View style={{ flex: 1 }}>
+            <MarqueeText 
               text={currentTrack?.title ?? ''}
               style={{ width: 150 }}
               textStyle={styles.title}
@@ -70,7 +82,7 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
               speed={0.3}
               spacing={45}
             />
-            <MarqueeText
+            <MarqueeText 
               text={currentTrack?.artist ?? ''}
               style={{ width: 150 }}
               textStyle={styles.artist}
@@ -81,22 +93,24 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
           </View>
         </View>
 
-        {/* Controls */}
         <View style={styles.controls}>
-          <TouchableOpacity onPress={previousTrack}>
-            <Ionicons name="play-skip-back" size={20} color="white" />
+          <TouchableOpacity onPress={handlePrevious}>
+            <Ionicons name="play-skip-back" size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handlePlayPause}>
-            <Ionicons name={isPlaying ? "pause" : "play"} size={20} color="white" />
+            <Ionicons
+              name={isPlaying ? 'pause' : 'play'}
+              size={24}
+              color="white"
+            />
           </TouchableOpacity>
-          <TouchableOpacity onPress={nextTrack}>
-            <Ionicons name="play-skip-forward" size={20} color="white" />
+          <TouchableOpacity onPress={handleNext}>
+            <Ionicons name="play-skip-forward" size={24} color="white" />
           </TouchableOpacity>
         </View>
-
       </View>
-    </TouchableOpacity >
-  )
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -111,7 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Add subtle dark overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderRadius: 50,
   },
   songInfo: {
@@ -146,5 +160,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MiniPlayer
+export default React.memo(MiniPlayer);
 

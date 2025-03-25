@@ -2,18 +2,45 @@ import { SeeAll, Text } from '@/components/atoms';
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { memo, useCallback, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { TrackBanner } from './components/TrackBanner';
 
 const ITEM_HEIGHT = 76;
+
+// Memoize the TrackBanner component
+const MemoizedTrackBanner = memo(TrackBanner);
+
+// Memoize the footer component
+const ListFooter = memo(({ isLoadingMore, hasMore, songsLength }: { 
+  isLoadingMore: boolean; 
+  hasMore: boolean; 
+  songsLength: number;
+}) => {
+  if (isLoadingMore) {
+    return (
+      <View style={styles.footer}>
+        <Text>Loading more songs...</Text>
+      </View>
+    );
+  }
+  if (!hasMore && songsLength > 0) {
+    return (
+      <View style={styles.footer}>
+        <Text>No more songs</Text>
+      </View>
+    );
+  }
+  return null;
+});
 
 export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.ComponentType<any> }) {
   const { songs, playTrack, currentTrack, loadMoreSongs, isLoadingMore, hasMore, isVisible } = usePlayerStore();
   const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
 
   const renderItem = useCallback(({ item: track }: { item: Track }) => (
-    <TrackBanner
+    <MemoizedTrackBanner
       track={track}
       isActive={currentTrack?.id === track.id}
       onPress={() => {
@@ -24,33 +51,7 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
     />
   ), [currentTrack?.id, playTrack]);
 
-   const renderFooter = useCallback(() => {
-    if (isLoadingMore) {
-      return (
-        <View style={styles.footer}>
-          <Text>Loading more songs...</Text>
-        </View>
-      );
-    }
-    if (!hasMore && songs.length > 0) {
-      return (
-        <View style={styles.footer}>
-          <Text>No more songs</Text>
-        </View>
-      );
-    }
-    return null;
-  }, [isLoadingMore, hasMore, songs.length]);
-
-   const keyExtractor = useCallback((item: Track) => item.id, []);
-
-  const getItemLayout = useCallback((data: any, index: number) => ({
-    length: ITEM_HEIGHT,
-    offset: ITEM_HEIGHT * index,
-    index,
-  }), []);
-
-   const ListHeader = useMemo(() => (
+  const ListHeader = useMemo(() => (
     <View style={styles.listContent}>
       {ListHeaderComponent && <ListHeaderComponent />}
       <View style={styles.sectionHeader}>
@@ -60,29 +61,31 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
     </View>
   ), [ListHeaderComponent]);
 
-  const containerStyle = useMemo(() => (
-    [styles.container, { paddingBottom: listPadding }]
-  ), [listPadding]);
+  const containerStyle = useMemo(() => [
+    styles.container,
+    { paddingBottom: listPadding }
+  ], [listPadding]);
 
   return (
     <View style={containerStyle}>
-      <FlatList
+      <FlashList
+        estimatedItemSize={ITEM_HEIGHT}
         ListHeaderComponent={ListHeader}
         ListHeaderComponentStyle={styles.listContent}
         data={songs}
         renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        getItemLayout={getItemLayout}
         onEndReached={loadMoreSongs}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
+        ListFooterComponent={
+          <ListFooter 
+            isLoadingMore={isLoadingMore} 
+            hasMore={hasMore} 
+            songsLength={songs.length} 
+          />
+        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        updateCellsBatchingPeriod={50}
-        initialNumToRender={10}
-        windowSize={5}
+        drawDistance={ITEM_HEIGHT * 10} // Optimize draw distance
       />
     </View>
   );
@@ -91,7 +94,6 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
   },
   sectionHeader: {
     flexDirection: 'row',

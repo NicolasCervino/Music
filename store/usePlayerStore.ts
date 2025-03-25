@@ -1,8 +1,9 @@
-import { create } from 'zustand';
 import { Track } from '@/entities';
 import { MusicMetadataService } from '@/services/MusicMetadataService';
+import { SongCacheService } from '@/services/SongCacheService';
 import { TrackPlayerService } from '@/services/TrackPlayerService';
 import TrackPlayer, { RepeatMode } from 'react-native-track-player';
+import { create } from 'zustand';
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -68,26 +69,58 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
   // Actions
   loadSongs: async () => {
     try {
-      const { tracks, hasMore } = await MusicMetadataService.getAllTracks(0);
-      const filteredTracks = filterExcludedTracks(tracks);
-      await TrackPlayerService.setupPlayer();
+      const cachedSongs = await SongCacheService.getCachedSongs();
+      
+      if (cachedSongs && cachedSongs.length > 0) {
+        const filteredTracks = filterExcludedTracks(cachedSongs);
+        await TrackPlayerService.setupPlayer();
 
-      if (filteredTracks.length > 0) {
-        await TrackPlayerService.addToQueue(filteredTracks);
+        if (filteredTracks.length > 0) {
+          await TrackPlayerService.addToQueue(filteredTracks);
+        }
+
+        set({
+          songs: filteredTracks,
+          currentPage: 0,
+          hasMore: true 
+        });
+        
+        // Load fresh data in the background
+        MusicMetadataService.getAllTracks(0).then(({ tracks }) => {
+          const freshFilteredTracks = filterExcludedTracks(tracks);
+          if (JSON.stringify(freshFilteredTracks) !== JSON.stringify(filteredTracks)) {
+            SongCacheService.cacheSongs(freshFilteredTracks);
+            set({
+              songs: freshFilteredTracks,
+              currentPage: 0,
+              hasMore: tracks.length >= 20 // Assuming PAGE_SIZE is 20
+            });
+          }
+        });
+      } else {
+        // No cache or expired cache, load from source
+        const { tracks, hasMore } = await MusicMetadataService.getAllTracks(0);
+        const filteredTracks = filterExcludedTracks(tracks);
+        await TrackPlayerService.setupPlayer();
+
+        if (filteredTracks.length > 0) {
+          await TrackPlayerService.addToQueue(filteredTracks);
+          await SongCacheService.cacheSongs(filteredTracks);
+        }
+
+        set({
+          songs: filteredTracks,
+          currentPage: 0,
+          hasMore
+        });
       }
-
-      set({
-        songs: filteredTracks,
-        currentPage: 0,
-        hasMore
-      });
     } catch (error) {
       console.error('Error loading songs:', error);
       set({ songs: [], hasMore: false });
     }
   },
   loadMoreSongs: async () => {
-    const { currentPage, isLoadingMore, hasMore, songs } = get();
+    const { currentPage, isLoadingMore, hasMore, songs, currentTrack } = get();
 
     if (isLoadingMore || !hasMore) return;
 
@@ -95,18 +128,63 @@ export const usePlayerStore = create<PlayerState & PlayerActions>((set, get) => 
       set({ isLoadingMore: true });
       const nextPage = currentPage + 1;
       const { tracks, hasMore: moreAvailable } = await MusicMetadataService.getAllTracks(nextPage);
-      const filteredTracks = filterExcludedTracks(tracks);
-
-      if (filteredTracks.length > 0) {
-        await TrackPlayerService.addToQueue(filteredTracks);
+      
+      // Don't filter if there are no tracks
+      if (!tracks || tracks.length === 0) {
+        set({ 
+          hasMore: false,
+          isLoadingMore: false 
+        });
+        return;
       }
 
-      set({
-        songs: [...songs, ...filteredTracks],
-        currentPage: nextPage,
-        hasMore: moreAvailable,
-        isLoadingMore: false
-      });
+      const filteredTracks = filterExcludedTracks(tracks);
+
+      // If all tracks were filtered out, try loading more
+      if (filteredTracks.length === 0 && moreAvailable) {
+        set({ 
+          currentPage: nextPage,
+          isLoadingMore: false 
+        });
+        // Recursively try to load more songs
+        get().loadMoreSongs();
+        return;
+      }
+
+      if (filteredTracks.length > 0) {
+        // Only update the queue if we're not currently playing
+        if (!currentTrack) {
+          await TrackPlayerService.addToQueue(filteredTracks);
+        } else {
+          // If we're playing, append to queue without resetting
+          const queue = filteredTracks.map(track => ({
+            id: track.id,
+            url: track.audioUrl,
+            title: track.title,
+            artist: track.artist,
+            artwork: track.artwork,
+            duration: parseInt(track.duration) || 0,
+            album: track.album,
+          }));
+          await TrackPlayer.add(queue);
+        }
+        
+        // Only append to cache if we have new songs
+        await SongCacheService.appendToCache(filteredTracks);
+
+        set({
+          songs: [...songs, ...filteredTracks],
+          currentPage: nextPage,
+          hasMore: moreAvailable,
+          isLoadingMore: false
+        });
+      } else {
+        // No tracks after filtering
+        set({ 
+          hasMore: moreAvailable,
+          isLoadingMore: false 
+        });
+      }
     } catch (error) {
       console.error('Error loading more songs:', error);
       set({ isLoadingMore: false });

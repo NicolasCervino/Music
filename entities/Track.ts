@@ -7,4 +7,5 @@ export type Track = {
   genre: string;
   artwork: string | undefined;
   audioUrl: string;
+  artworkColor?: string;
 };

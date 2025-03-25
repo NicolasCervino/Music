@@ -1,44 +1,71 @@
+import { ColorCacheService } from '@/services/CacheColorService';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import TrackPlayer, { Event, State } from 'react-native-track-player';
 
-export async function PlaybackService() {
+export const PlaybackService = async function() {
   // Remote control events
-  TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
-  TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause());
-  TrackPlayer.addEventListener(Event.RemoteStop, () => TrackPlayer.stop());
-  TrackPlayer.addEventListener(Event.RemoteNext, () => TrackPlayer.skipToNext());
-  TrackPlayer.addEventListener(Event.RemotePrevious, () => TrackPlayer.skipToPrevious());
+  TrackPlayer.addEventListener(Event.RemotePlay, () => {
+    usePlayerStore.getState().setIsPlaying(true);
+  });
+
+  TrackPlayer.addEventListener(Event.RemotePause, () => {
+    usePlayerStore.getState().setIsPlaying(false);
+  });
+
+  TrackPlayer.addEventListener(Event.RemoteStop, () => {
+    usePlayerStore.getState().stopTrack();
+  });
+
+  TrackPlayer.addEventListener(Event.RemoteNext, () => {
+    usePlayerStore.getState().nextTrack();
+  });
+
+  TrackPlayer.addEventListener(Event.RemotePrevious, () => {
+    usePlayerStore.getState().previousTrack();
+  });
 
   // Track change event
   TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async (event) => {
-    if (event.nextTrack !== null) {
+    if (event.nextTrack !== null && event.nextTrack !== undefined) {
       const track = await TrackPlayer.getTrack(event.nextTrack);
       if (track) {
-        const playerStore = usePlayerStore.getState();
-        // Set the new track with all required properties
-        playerStore.setCurrentTrack({
+        const newTrack = {
           id: track.id as string,
           title: track.title as string,
           artist: track.artist as string,
           artwork: track.artwork as string,
           duration: track.duration?.toString() || '--:--',
           audioUrl: track.url as string,
-          album: track.album as string || 'Unknown Album',  // Add this
-          genre: track.genre as string || 'Unknown Genre'   // Add this
-        });
-      
-        // Only reset artwork loaded state if the artwork URL actually changed
-        if (track.artwork !== playerStore.currentTrack?.artwork) {
-          playerStore.setIsArtworkLoaded(false);
+          album: track.album as string,
+          genre: track.genre as string,
+        };
+        
+        // Update the current track
+        usePlayerStore.getState().setCurrentTrack(newTrack);
+        usePlayerStore.getState().setIsArtworkLoaded(false); // Reset artwork loaded state
+        
+        // Try to get cached color first
+        if (track.id && track.artwork) {
+          const cachedColor = await ColorCacheService.getStoredColor(track.id);
+          if (cachedColor) {
+            usePlayerStore.getState().setArtworkColor(cachedColor);
+            usePlayerStore.getState().setIsArtworkLoaded(true);
+          } else {
+            // If no cached color, let the useImageColor hook handle it
+            usePlayerStore.getState().setArtworkColor('');
+          }
         }
       }
+    } else {
+      usePlayerStore.getState().setCurrentTrack(null);
+      usePlayerStore.getState().setArtworkColor('');
+      usePlayerStore.getState().setIsArtworkLoaded(false);
     }
   });
 
   // Playback state events
   TrackPlayer.addEventListener(Event.PlaybackState, (event) => {
-    const isPlaying = event.state === State.Playing;
-    usePlayerStore.getState().setIsPlaying(isPlaying);
+    usePlayerStore.getState().setIsPlaying(event.state === State.Playing);
   });
 
   // Error handling

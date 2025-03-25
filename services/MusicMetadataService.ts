@@ -1,8 +1,7 @@
 import { Track } from '@/entities';
-import { Asset } from 'expo-asset';
-/* import MusicInfo from 'expo-music-info-2'; */
-import { getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
 import * as MediaLibrary from 'expo-media-library';
+import { getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
+import { ColorCacheService } from './CacheColorService';
 
 const AUDIO_ASSETS = {
   'bad-habit.mp3': require('@/assets/audio/bad-habit.mp3'),
@@ -47,20 +46,31 @@ export class MusicMetadataService {
         return { tracks: [], hasMore: false };
       }
 
-      const tracks = songsOrError.map((song): Track => ({
-        id: song.url,
-        title: song.title,
-        album: song.album,
-        artist: song.artist,
-        duration: this.formatDuration(song.duration),
-        genre: song.genre,
-        artwork: song.cover || undefined,
-        audioUrl: song.url
-      }))
+      const tracks = songsOrError.map(async (song): Promise<Track> => {
+        // Try to get cached color if artwork exists
+        let artworkColor = '';
+        if (song.cover) {
+          artworkColor = await ColorCacheService.getStoredColor(song.url) || '';
+        }
+
+        return {
+          id: song.url,
+          title: song.title,
+          album: song.album,
+          artist: song.artist,
+          duration: this.formatDuration(song.duration),
+          genre: song.genre,
+          artwork: song.cover || undefined,
+          audioUrl: song.url,
+          artworkColor: artworkColor  // Include the color in the track object
+        }
+      });
+
+      const resolvedTracks = await Promise.all(tracks);
 
       return {
-        tracks,
-        hasMore: tracks.length >= this.PAGE_SIZE
+        tracks: resolvedTracks,
+        hasMore: resolvedTracks.length >= this.PAGE_SIZE
       };
     } catch (error) {
       console.error('Error getting tracks:', error);

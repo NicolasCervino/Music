@@ -1,7 +1,7 @@
-import TrackPlayer, { AppKilledPlaybackBehavior, Capability, Event, RepeatMode } from 'react-native-track-player';
 import { Track } from '@/entities';
-import { PlaybackService } from './PlaybackService';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import TrackPlayer, { AppKilledPlaybackBehavior, Capability, RepeatMode } from 'react-native-track-player';
+import { PlaybackService } from './PlaybackService';
 
 export class TrackPlayerService {
   private static isInitialized = false;
@@ -101,13 +101,11 @@ export class TrackPlayerService {
     }
   }
 
-  static async addToQueue(tracks: Track[], startIndex: number = 0) {
+  static async addToQueue(tracks: Track[], startIndex: number = 0, reset: boolean = true) {
     try {
       if (!this.isInitialized) {
         await this.setupPlayer();
       }
-
-      await TrackPlayer.reset();
 
       const queue = tracks.map(track => ({
         id: track.id,
@@ -118,22 +116,31 @@ export class TrackPlayerService {
         duration: parseInt(track.duration) || 0,
       }));
 
-      await TrackPlayer.add(queue);
-      await TrackPlayer.skip(startIndex);
+      if (reset) {
+        await TrackPlayer.reset();
+        await TrackPlayer.add(queue);
+        await TrackPlayer.skip(startIndex);
+      } else {
+        await TrackPlayer.add(queue);
+      }
 
-      // Get the current track after skipping
-      const currentTrack = await TrackPlayer.getCurrentTrack();
-      if (currentTrack !== null) {
-        const trackData = await TrackPlayer.getTrack(currentTrack);
-        if (trackData) {
-          usePlayerStore.getState().setCurrentTrack({
-            id: trackData.id as string,
-            title: trackData.title as string,
-            artist: trackData.artist as string,
-            artwork: trackData.artwork as string,
-            duration: trackData.duration?.toString() || '--:--',
-            audioUrl: trackData.url as string,
-          });
+      // Only update current track if we're resetting the queue
+      if (reset) {
+        const currentTrack = await TrackPlayer.getCurrentTrack();
+        if (currentTrack !== null) {
+          const trackData = await TrackPlayer.getTrack(currentTrack);
+          if (trackData) {
+            usePlayerStore.getState().setCurrentTrack({
+              id: trackData.id as string,
+              title: trackData.title as string,
+              artist: trackData.artist as string,
+              artwork: trackData.artwork as string,
+              duration: trackData.duration?.toString() || '--:--',
+              audioUrl: trackData.url as string,
+              album: trackData.album as string,
+              genre: trackData.genre as string,
+            });
+          }
         }
       }
     } catch (error) {

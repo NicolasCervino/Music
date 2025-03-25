@@ -42,13 +42,14 @@ export function usePlayer() {
     } finally {
       loadingRef.current = false;
     }
-  }, [onLoad, backgroundColor, setArtworkColor, setIsArtworkLoaded]);
+  }, [backgroundColor, onLoad, setArtworkColor, setIsArtworkLoaded]);
 
   useEffect(() => {
-    if (currentTrack && !isArtworkLoaded) {
+    if (currentTrack?.artwork) {
+      setIsArtworkLoaded(false);
       handleArtworkLoad();
     }
-  }, [currentTrack, handleArtworkLoad, isArtworkLoaded]);
+  }, [currentTrack?.artwork, handleArtworkLoad, setIsArtworkLoaded]);
 
   const isPlayerReady = Boolean(
     currentTrack &&
