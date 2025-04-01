@@ -1,8 +1,8 @@
-import { ensureColorContrast } from '@/packages/Images/utils/utils';
 import { ColorService } from '@/services/CacheColorService';
 import { MusicService } from '@/services/MusicMetadataService';
 import { PlayerService } from '@/services/TrackPlayerService';
 import { useTheme } from '@/theme';
+import { ensureColorContrast } from '@/utils';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Image as RNImage } from 'react-native';
 import { getColors } from 'react-native-image-colors';
@@ -51,7 +51,7 @@ export function useTrackColor(trackId?: string, artwork?: string) {
   return useQuery({
     queryKey: ['trackColor', trackId],
     queryFn: async () => {
-      if (!trackId || !artwork) return theme.colors.accent;
+      if (!trackId || !artwork) return theme.colors.primary;
       
       // Try to get from cache first
       const cachedColor = await ColorService.getStoredColor(trackId);
@@ -87,7 +87,7 @@ export function useTrackColor(trackId?: string, artwork?: string) {
         return theme.colors.accent;
       }
     },
-    enabled: !!trackId && !!artwork,
+    enabled: !!trackId,
     staleTime: Infinity, // Colors don't change
   });
 } 

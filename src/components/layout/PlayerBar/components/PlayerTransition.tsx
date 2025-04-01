@@ -1,7 +1,8 @@
+import { useTheme } from '@/src/theme';
+import PlayerView from '@/views/Player/PlayerView';
 import { StyleSheet, View } from 'react-native';
 import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import MiniPlayer from './MiniPlayer';
-import PlayerView from '@/views/Player/PlayerView';
 
 type PlayerTransitionProps = {
   progress: SharedValue<number>;
@@ -19,6 +20,8 @@ export default function PlayerTransition({
   isAtInitialPosition,
 }: PlayerTransitionProps) {
 
+  const { theme } = useTheme();
+
   const miniPlayerStyle = useAnimatedStyle(() => ({
     opacity: isAtInitialPosition.value ? 1 :
       progress.value >= 0.95 ? 1 :
@@ -35,6 +38,8 @@ export default function PlayerTransition({
     pointerEvents: isAtInitialPosition.value ? 'none' : 'auto' as const,
   }));
 
+  const backgroundColor = artworkColor === '' ? theme.colors.primary : artworkColor;
+
   return (
     <View style={StyleSheet.absoluteFill}>
       <Animated.View
@@ -42,7 +47,7 @@ export default function PlayerTransition({
       >
         <MiniPlayer
           onPress={onMiniPlayerPress}
-          backgroundColor={artworkColor}
+          backgroundColor={backgroundColor}
           isReady={isPlayerReady}
         />
       </Animated.View>
@@ -51,7 +56,7 @@ export default function PlayerTransition({
         style={[StyleSheet.absoluteFill, playerViewStyle]}
       >
         <PlayerView
-          backgroundColor={artworkColor}
+          backgroundColor={backgroundColor}
           isReady={isPlayerReady}
         />
       </Animated.View>

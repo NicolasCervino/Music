@@ -8,7 +8,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
-    "assets": ["./src/assets/audio/*"],
+    "assets": [
+      "./src/assets/audio/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -38,7 +40,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true
