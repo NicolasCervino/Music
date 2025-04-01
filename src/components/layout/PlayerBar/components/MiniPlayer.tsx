@@ -3,7 +3,7 @@ import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions'
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 
 type MiniPlayerProps = {
@@ -15,7 +15,6 @@ type MiniPlayerProps = {
 function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
   const {
     currentTrack,
-    handleArtworkLoad,
     isPlaying,
     pauseTrack,
     resumeTrack,
@@ -23,27 +22,12 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
     previousTrack
   } = usePlayer();
 
-  // Trigger artwork load whenever track changes
-  useEffect(() => {
-    if (currentTrack?.artwork) {
-      handleArtworkLoad();
-    }
-  }, [currentTrack?.id, handleArtworkLoad]);
-
   const handlePlayPause = () => {
     if (isPlaying) {
       pauseTrack();
     } else {
       resumeTrack();
     }
-  };
-
-  const handleNext = async () => {
-    await nextTrack();
-  };
-
-  const handlePrevious = async () => {
-    await previousTrack();
   };
 
   return (
@@ -66,7 +50,6 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
               style={styles.artwork}
               contentFit="cover"
               transition={200}
-              onLoad={handleArtworkLoad}
             />
           ) : (
             <View style={[styles.artwork, styles.placeholderArtwork]}>
@@ -94,7 +77,7 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
         </View>
 
         <View style={styles.controls}>
-          <TouchableOpacity onPress={handlePrevious}>
+          <TouchableOpacity onPress={() => previousTrack()}>
             <Ionicons name="play-skip-back" size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handlePlayPause}>
@@ -104,7 +87,7 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
               color="white"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleNext}>
+          <TouchableOpacity onPress={() => nextTrack()}>
             <Ionicons name="play-skip-forward" size={24} color="white" />
           </TouchableOpacity>
         </View>

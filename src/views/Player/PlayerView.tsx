@@ -1,12 +1,11 @@
-import { View, StyleSheet } from 'react-native';
 import { Text } from '@/components/atoms';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
-import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RepeatMode } from 'react-native-track-player';
 import { ProgressSlider } from '@/packages/MusicPlayer/components/ProgressSlider.tsx/ProgressSlider';
+import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { StyleSheet, View } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import { RepeatMode } from 'react-native-track-player';
 
 type PlayerViewProps = {
   backgroundColor: string;
@@ -17,7 +16,6 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
   const {
     currentTrack,
     isPlaying,
-    handleArtworkLoad,
     pauseTrack,
     resumeTrack,
     isExpanded,
@@ -41,14 +39,12 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
         }
       ]}
     >
-      {/* Artwork section */}
       <View style={styles.contentContainer}>
         {currentTrack.artwork ? (
           <Image
             source={{ uri: currentTrack.artwork }}
             style={styles.artwork}
             contentFit="cover"
-            onLoad={handleArtworkLoad}
           />
         ) : (
           <View style={[styles.artwork, styles.placeholderArtwork]}>
@@ -60,22 +56,19 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
           </View>
         )}
 
-        {/* Song info section */}
         <View style={styles.songInfo}>
           <Text style={styles.title}>{currentTrack.title}</Text>
           <Text style={styles.artist}>{currentTrack.artist}</Text>
         </View>
 
-        {/* Progress slider */}
         <ProgressSlider />
 
-        {/* Controls section */}
         <View style={styles.controls}>
           <TouchableOpacity style={styles.controlButton}>
             <Ionicons name="shuffle" size={24} color="white" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton} onPress={previousTrack}>
+          <TouchableOpacity style={styles.controlButton} onPress={() => previousTrack()}>
             <Ionicons name="play-skip-back" size={24} color="white" />
           </TouchableOpacity>
 
@@ -86,13 +79,13 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
             <Ionicons name={isPlaying ? "pause" : "play"} size={32} color="black" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton} onPress={nextTrack}>
+          <TouchableOpacity style={styles.controlButton} onPress={() => nextTrack()}>
             <Ionicons name="play-skip-forward" size={24} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.controlButton}
-            onPress={toggleRepeatMode}
+            onPress={() => toggleRepeatMode()}
           >
             <Ionicons
               name={repeatMode === RepeatMode.Off ? "repeat" : "repeat-outline"}
@@ -101,9 +94,8 @@ export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerV
             />
           </TouchableOpacity>
         </View>
-
       </View>
-    </View >
+    </View>
   );
 }
 

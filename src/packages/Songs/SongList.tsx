@@ -1,7 +1,7 @@
 import { SeeAll, Text } from '@/components/atoms';
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
-import { usePlayerStore } from '@/store/usePlayerStore';
+import { useCurrentTrack, usePlayerControls, useTracks } from '@/features/player';
 import { FlashList } from '@shopify/flash-list';
 import { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -36,20 +36,31 @@ const ListFooter = memo(({ isLoadingMore, hasMore, songsLength }: {
 });
 
 export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.ComponentType<any> }) {
-  const { songs, playTrack, currentTrack, loadMoreSongs, isLoadingMore, hasMore, isVisible } = usePlayerStore();
+  // 1. Group all hooks at the top
+  const { data: currentTrack } = useCurrentTrack();
+  const { 
+    data: tracksData, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage,
+    isLoading,
+    isError
+  } = useTracks();
+  const controls = usePlayerControls();
+
+  // 2. Move all memoized values together
+  const songs = useMemo(() => {
+    if (!tracksData?.pages) return [];
+    return tracksData.pages.flatMap(page => page.tracks);
+  }, [tracksData?.pages]);
+
+  const isVisible = !!currentTrack;
   const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
 
-  const renderItem = useCallback(({ item: track }: { item: Track }) => (
-    <MemoizedTrackBanner
-      track={track}
-      isActive={currentTrack?.id === track.id}
-      onPress={() => {
-        if (currentTrack?.id !== track.id) {
-          playTrack(track);
-        }
-      }}
-    />
-  ), [currentTrack?.id, playTrack]);
+  const containerStyle = useMemo(() => [
+    styles.container,
+    { paddingBottom: listPadding }
+  ], [listPadding]);
 
   const ListHeader = useMemo(() => (
     <View style={styles.listContent}>
@@ -61,10 +72,34 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
     </View>
   ), [ListHeaderComponent]);
 
-  const containerStyle = useMemo(() => [
-    styles.container,
-    { paddingBottom: listPadding }
-  ], [listPadding]);
+  const renderItem = useCallback(({ item: track }: { item: Track }) => (
+    <MemoizedTrackBanner
+      track={track}
+      isActive={currentTrack?.id === track.id}
+      onPress={() => {
+        if (currentTrack?.id !== track.id) {
+          controls.playTrack({ track, allTracks: songs });
+        }
+      }}
+    />
+  ), [currentTrack?.id, controls, songs]);
+
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage().catch(error => {
+        console.error('Error fetching next page:', error);
+      });
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (isError) {
+    return (
+      <View style={styles.footer}>
+        <Text>Error loading songs</Text>
+      </View>
+    );
+  }
+
 
   return (
     <View style={containerStyle}>
@@ -74,18 +109,21 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
         ListHeaderComponentStyle={styles.listContent}
         data={songs}
         renderItem={renderItem}
-        onEndReached={loadMoreSongs}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           <ListFooter 
-            isLoadingMore={isLoadingMore} 
-            hasMore={hasMore} 
+            isLoadingMore={isFetchingNextPage} 
+            hasMore={!!hasNextPage} 
             songsLength={songs.length} 
           />
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        drawDistance={ITEM_HEIGHT * 10} // Optimize draw distance
+        drawDistance={ITEM_HEIGHT * 10}
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+        }}
       />
     </View>
   );

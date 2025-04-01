@@ -2,8 +2,8 @@ import HeaderLogo from '@/components/atoms/Logo/HeaderLogo';
 import ExpandablePlayerBar from '@/components/layout/PlayerBar/ExpandablePlayerBar';
 import TabBar from '@/components/layout/TabBar/TabBar';
 import TabContent from '@/components/layout/TabBar/TabContent';
+import { useInitializePlayer } from '@/features/player';
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
-import { usePlayerStore } from '@/store/usePlayerStore';
 import { useTheme } from '@/theme';
 import { useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -13,11 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function Layout() {
   const [activeTab, setActiveTab] = useState('home');
   const { isPlayerReady, isExpanded, artworkColor, isVisible } = usePlayer();
+   const initializePlayer = useInitializePlayer();
   const { theme } = useTheme();
   const navigation = useNavigation();
 
   useEffect(() => {
-    usePlayerStore.getState().loadSongs();
+    initializePlayer.mutate();
   }, []);
 
   const statusBarStyle = isExpanded && isPlayerReady
@@ -35,7 +36,6 @@ export default function Layout() {
       StatusBar.setBackgroundColor(statusBarBackgroundColor, true);
       StatusBar.setBarStyle(statusBarStyle as StatusBarStyle);
 
-      // Always update navigation bar color, not just when expanded
       navigation.setOptions({
         navigationBarColor: isExpanded && isPlayerReady
           ? statusBarBackgroundColor
