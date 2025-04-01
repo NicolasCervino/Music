@@ -56,14 +56,13 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
   } = useTracks();
   const controls = usePlayerControls();
   
-  // Use current track ID directly, not a separate state
   const activeTrackId = currentTrack?.id;
 
   // 2. Move all memoized values together
   const songs = useMemo(() => {
     if (!tracksData?.pages) return [];
     
-    // Remove duplicates by URL path (ID)
+    // Remove duplicates by ID
     const uniqueSongs = new Map<string, Track>();
     tracksData.pages.forEach(page => {
       page.tracks.forEach(track => {
@@ -73,9 +72,7 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
       });
     });
     
-    const songsArray = Array.from(uniqueSongs.values());
-    
-    return songsArray;
+    return Array.from(uniqueSongs.values());
   }, [tracksData?.pages]);
 
   const isVisible = !!currentTrack;
@@ -104,6 +101,7 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
 
   const renderItem = useCallback(({ item: track }: { item: Track }) => {
     const isActive = track.id === activeTrackId;
+    
     return (
       <TrackBanner
         track={track}

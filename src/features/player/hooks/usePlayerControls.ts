@@ -18,11 +18,12 @@ export function usePlayerControls() {
       await PlayerService.playTrack(track, allTracks);
     },
     onSuccess: async (_, variables) => {
-      // Actualizar inmediatamente currentTrack con la canción seleccionada
+      // Actualizar directamente currentTrack con la canción seleccionada
+      // para una respuesta instantánea en la UI
       const { track } = variables;
       queryClient.setQueryData(['currentTrack'], track);
       
-      // Después refrescar para asegurar
+      // Luego refrescar para asegurar sincronización con el reproductor real
       await refreshCurrentTrack();
       queryClient.invalidateQueries({ queryKey: ['playerState'] });
     }

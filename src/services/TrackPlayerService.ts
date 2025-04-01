@@ -105,10 +105,10 @@ export const PlayerService = {
     const trackData = await TrackPlayer.getTrack(trackIndex);
     if (!trackData) return null;
     
-    // Return the track with the exact same ID as was added to the queue
+    // Mantener el ID exactamente como está en el reproductor
     return {
-      id: trackData.id as string, // Critical to keep exactly as is
-      url: trackData.url as string, // Include URL to help with matching
+      id: trackData.id as string,
+      url: trackData.url as string,
       title: trackData.title as string,
       artist: trackData.artist as string,
       artwork: trackData.artwork as string,

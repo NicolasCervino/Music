@@ -69,19 +69,8 @@ export const TrackBanner = memo(function TrackBanner({ track, isActive, onPress 
     </TouchableOpacity>
   );
 }, (prevProps, nextProps) => {
-  // Si el estado activo cambió, siempre volvemos a renderizar
-  if (prevProps.isActive !== nextProps.isActive) {
-    return false; // No saltar la renderización
-  }
-  
-  // Si el ID cambió, volvemos a renderizar
-  if (prevProps.track.id !== nextProps.track.id) {
-    return false; // No saltar la renderización
-  }
-  
-  // Si llegamos aquí, significa que ni el estado activo ni el ID cambiaron
-  // Podemos evitar la renderización
-  return true; // Saltar la renderización
+  // Simplify: only re-render if active state or track ID changes
+  return prevProps.isActive === nextProps.isActive && prevProps.track.id === nextProps.track.id;
 });
 
 const styles = StyleSheet.create({
