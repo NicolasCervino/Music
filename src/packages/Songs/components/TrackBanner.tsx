@@ -3,7 +3,7 @@ import { Track } from '@/entities';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 type TrackBannerProps = {
@@ -12,13 +12,20 @@ type TrackBannerProps = {
   onPress: () => void;
 };
 
-export const TrackBanner = React.memo(function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
+export const TrackBanner = memo(function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
   const { theme } = useTheme();
 
   return (
     <TouchableOpacity
       activeOpacity={0.5}
-      style={[styles.trackItem]}
+      style={[
+        styles.trackItem, 
+        isActive ? { 
+          backgroundColor: 'rgba(0, 0, 255, 0.15)',
+          borderLeftWidth: 3,
+          borderLeftColor: theme.colors.primary
+        } : null
+      ]}
       onPress={onPress}
     >
       {track.artwork ? (
@@ -32,7 +39,7 @@ export const TrackBanner = React.memo(function TrackBanner({ track, isActive, on
           <Ionicons
             name="musical-note"
             size={24}
-            color={isActive ? theme.colors.primary : 'rgba(255, 255, 255, 0.7)'}
+            color={isActive ? theme.colors.primary : theme.colors.text}
           />
         </View>
       )}
@@ -61,6 +68,20 @@ export const TrackBanner = React.memo(function TrackBanner({ track, isActive, on
       </Text>
     </TouchableOpacity>
   );
+}, (prevProps, nextProps) => {
+  // Si el estado activo cambió, siempre volvemos a renderizar
+  if (prevProps.isActive !== nextProps.isActive) {
+    return false; // No saltar la renderización
+  }
+  
+  // Si el ID cambió, volvemos a renderizar
+  if (prevProps.track.id !== nextProps.track.id) {
+    return false; // No saltar la renderización
+  }
+  
+  // Si llegamos aquí, significa que ni el estado activo ni el ID cambiaron
+  // Podemos evitar la renderización
+  return true; // Saltar la renderización
 });
 
 const styles = StyleSheet.create({

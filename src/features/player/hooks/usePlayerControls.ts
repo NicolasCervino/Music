@@ -6,12 +6,24 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 export function usePlayerControls() {
   const queryClient = useQueryClient();
   
+  // Helper function to force refresh currentTrack
+  const refreshCurrentTrack = async () => {
+    await PlayerService.setupPlayer();
+    const newTrack = await PlayerService.getCurrentTrack();
+    queryClient.setQueryData(['currentTrack'], newTrack);
+  };
+  
   const playTrackMutation = useMutation({
     mutationFn: async ({ track, allTracks }: { track: Track, allTracks: Track[] }) => {
       await PlayerService.playTrack(track, allTracks);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentTrack'] });
+    onSuccess: async (_, variables) => {
+      // Actualizar inmediatamente currentTrack con la canción seleccionada
+      const { track } = variables;
+      queryClient.setQueryData(['currentTrack'], track);
+      
+      // Después refrescar para asegurar
+      await refreshCurrentTrack();
       queryClient.invalidateQueries({ queryKey: ['playerState'] });
     }
   });
@@ -33,8 +45,8 @@ export function usePlayerControls() {
     mutationFn: async () => {
       await PlayerService.skipToNext();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentTrack'] });
+    onSuccess: async () => {
+      await refreshCurrentTrack();
     }
   });
   
@@ -42,8 +54,8 @@ export function usePlayerControls() {
     mutationFn: async () => {
       await PlayerService.skipToPrevious();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentTrack'] });
+    onSuccess: async () => {
+      await refreshCurrentTrack();
     }
   });
   

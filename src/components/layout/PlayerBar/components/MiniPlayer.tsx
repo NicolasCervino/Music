@@ -31,9 +31,7 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
   };
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={1}
+    <View
       style={[
         styles.container,
         {
@@ -43,7 +41,11 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
       ]}
     >
       <View style={styles.content}>
-        <View style={styles.songInfo}>
+        <TouchableOpacity
+          onPress={onPress}
+          activeOpacity={0.7}
+          style={styles.songInfo}
+        >
           {currentTrack?.artwork ? (
             <Image
               source={{ uri: currentTrack.artwork }}
@@ -74,25 +76,43 @@ function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProps) {
               spacing={45}
             />
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.controls}>
-          <TouchableOpacity onPress={() => previousTrack()}>
+          <TouchableOpacity 
+            onPress={(e) => {
+              e.stopPropagation();
+              previousTrack();
+            }}
+            activeOpacity={0.5}
+          >
             <Ionicons name="play-skip-back" size={24} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handlePlayPause}>
+          <TouchableOpacity 
+            onPress={(e) => {
+              e.stopPropagation();
+              handlePlayPause();
+            }}
+            activeOpacity={0.5}
+          >
             <Ionicons
               name={isPlaying ? 'pause' : 'play'}
               size={24}
               color="white"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => nextTrack()}>
+          <TouchableOpacity 
+            onPress={(e) => {
+              e.stopPropagation();
+              nextTrack();
+            }}
+            activeOpacity={0.5}
+          >
             <Ionicons name="play-skip-forward" size={24} color="white" />
           </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 

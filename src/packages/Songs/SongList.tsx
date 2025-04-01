@@ -9,8 +9,16 @@ import { TrackBanner } from './components/TrackBanner';
 
 const ITEM_HEIGHT = 76;
 
-// Memoize the TrackBanner component
-const MemoizedTrackBanner = memo(TrackBanner);
+// Simple hash function for generating unique keys
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(36);
+}
 
 // Memoize the footer component
 const ListFooter = memo(({ isLoadingMore, hasMore, songsLength }: { 
@@ -47,11 +55,27 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
     isError
   } = useTracks();
   const controls = usePlayerControls();
+  
+  // Use current track ID directly, not a separate state
+  const activeTrackId = currentTrack?.id;
 
   // 2. Move all memoized values together
   const songs = useMemo(() => {
     if (!tracksData?.pages) return [];
-    return tracksData.pages.flatMap(page => page.tracks);
+    
+    // Remove duplicates by URL path (ID)
+    const uniqueSongs = new Map<string, Track>();
+    tracksData.pages.forEach(page => {
+      page.tracks.forEach(track => {
+        if (!uniqueSongs.has(track.id)) {
+          uniqueSongs.set(track.id, track);
+        }
+      });
+    });
+    
+    const songsArray = Array.from(uniqueSongs.values());
+    
+    return songsArray;
   }, [tracksData?.pages]);
 
   const isVisible = !!currentTrack;
@@ -72,17 +96,26 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
     </View>
   ), [ListHeaderComponent]);
 
-  const renderItem = useCallback(({ item: track }: { item: Track }) => (
-    <MemoizedTrackBanner
-      track={track}
-      isActive={currentTrack?.id === track.id}
-      onPress={() => {
-        if (currentTrack?.id !== track.id) {
-          controls.playTrack({ track, allTracks: songs });
-        }
-      }}
-    />
-  ), [currentTrack?.id, controls, songs]);
+  // Create a truly unique key for each item
+  const keyExtractor = useCallback((item: Track) => {
+    const baseKey = `track-${hashString(item.id)}-${item.title}`;
+    return baseKey;
+  }, []);
+
+  const renderItem = useCallback(({ item: track }: { item: Track }) => {
+    const isActive = track.id === activeTrackId;
+    return (
+      <TrackBanner
+        track={track}
+        isActive={isActive}
+        onPress={() => {
+          if (track.id !== activeTrackId) {
+            controls.playTrack({ track, allTracks: songs });
+          }
+        }}
+      />
+    );
+  }, [activeTrackId, controls, songs]);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -111,6 +144,7 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
         renderItem={renderItem}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
+        extraData={activeTrackId}
         ListFooterComponent={
           <ListFooter 
             isLoadingMore={isFetchingNextPage} 
@@ -124,6 +158,7 @@ export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.
         maintainVisibleContentPosition={{
           minIndexForVisible: 0,
         }}
+        keyExtractor={keyExtractor}
       />
     </View>
   );

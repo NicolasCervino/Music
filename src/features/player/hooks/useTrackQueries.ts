@@ -36,6 +36,11 @@ export function useCurrentTrack() {
       await PlayerService.setupPlayer();
       return PlayerService.getCurrentTrack();
     },
+    staleTime: Infinity, // Never consider stale by time passing
+    gcTime: Infinity, // Never remove from cache
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

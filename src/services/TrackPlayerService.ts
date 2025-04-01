@@ -74,7 +74,7 @@ export const PlayerService = {
     await TrackPlayer.reset();
     
     const queue = allTracks.map(track => ({
-      id: track.id,
+      id: track.id, // Important! Use the exact same ID as in the Track object
       url: track.audioUrl,
       title: track.title,
       artist: track.artist,
@@ -105,8 +105,10 @@ export const PlayerService = {
     const trackData = await TrackPlayer.getTrack(trackIndex);
     if (!trackData) return null;
     
+    // Return the track with the exact same ID as was added to the queue
     return {
-      id: trackData.id as string,
+      id: trackData.id as string, // Critical to keep exactly as is
+      url: trackData.url as string, // Include URL to help with matching
       title: trackData.title as string,
       artist: trackData.artist as string,
       artwork: trackData.artwork as string,

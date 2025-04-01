@@ -13,6 +13,35 @@ const EXCLUDED_PATHS = [
   '/storage/emulated/0/zedge'
 ];
 
+// Improved hash function that produces consistent results across app sessions
+const stableHash = (str: string): string => {
+  // Normalize the URL for better consistency
+  const normalizedStr = str.toLowerCase().trim();
+  
+  // Use a simple but consistent hashing algorithm
+  let hash = 0;
+  if (normalizedStr.length === 0) return hash.toString(36);
+  
+  for (let i = 0; i < normalizedStr.length; i++) {
+    const char = normalizedStr.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Make it positive and convert to base 36 (alphanumeric) for shorter IDs
+  return Math.abs(hash).toString(36);
+};
+
+// Generate a unique ID for each track - use just the URL as the primary key
+const generateTrackId = (url: string): string => {
+  // Remove common path prefixes and suffixes that might cause inconsistency
+  const cleanUrl = url
+    .replace('/storage/emulated/0/', '') // Remove common path prefix
+    .split('?')[0]; // Remove any query parameters
+    
+  return `track-${stableHash(cleanUrl)}`;
+};
+
 export const MusicService = {
   formatDuration: (durationMs: number): string => {
     const totalSeconds = Math.floor(durationMs / 1000);
@@ -72,14 +101,21 @@ export const MusicService = {
       const hasMore = hasMoreInternal || (filteredSongs.length > PAGE_SIZE);
       const songsToProcess = filteredSongs.slice(0, PAGE_SIZE);
       
+      // Create a map to track processed songs and avoid duplicates
+      const processedSongs = new Map<string, boolean>();
+      
       const tracks = await Promise.all(songsToProcess.map(async (song): Promise<Track> => {
         let artworkColor = '';
         if (song.cover) {
           artworkColor = await ColorService.getStoredColor(song.url) || '';
         }
 
+        // Generate a unique ID based only on URL
+        const uniqueId = generateTrackId(song.url);
+        
         return {
-          id: song.url,
+          id: uniqueId,
+          url: song.url,
           title: song.title || 'Unknown Title',
           album: song.album || 'Unknown Album',
           artist: song.artist || 'Unknown Artist',
@@ -91,7 +127,16 @@ export const MusicService = {
         };
       }));
 
-      return { tracks, hasMore };
+      // Filter out any duplicate tracks
+      const uniqueTracks = tracks.filter(track => {
+        if (processedSongs.has(track.url || '')) {
+          return false;
+        }
+        processedSongs.set(track.url || '', true);
+        return true;
+      });
+
+      return { tracks: uniqueTracks, hasMore };
     } catch (error) {
       console.error('Error getting tracks:', error);
       return { tracks: [], hasMore: false };
