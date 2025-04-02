@@ -73,10 +73,7 @@ export function SongList({
 
    return (
       <View style={containerStyle}>
-         <ErrorBoundary
-            isLoading={isLoading}
-            fallback={<SongListSkeleton ListHeader={ListHeader} count={8} />}
-         >
+         <ErrorBoundary isLoading={isLoading} fallback={<SongListSkeleton count={8} />}>
             <FlashList
                estimatedItemSize={ITEM_HEIGHT}
                ListHeaderComponent={ListHeader}
