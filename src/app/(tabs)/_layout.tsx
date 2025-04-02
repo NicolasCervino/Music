@@ -1,7 +1,6 @@
 import HeaderLogo from '@/components/atoms/Logo/HeaderLogo';
-import ExpandablePlayerBar from '@/components/layout/PlayerBar/ExpandablePlayerBar';
-import TabBar from '@/components/layout/TabBar/TabBar';
-import TabContent from '@/components/layout/TabBar/TabContent';
+import { ExpandablePlayerBar, TabBar } from '@/components/layout';
+import { TabContent } from '@/components/layout/TabBar/TabContent';
 import { useInitializePlayer } from '@/features/player';
 import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
 import { useTheme } from '@/theme';

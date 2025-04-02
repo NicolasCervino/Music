@@ -8,7 +8,7 @@ import PlayerTransition from "./components/PlayerTransition";
 import { styles } from "./ExpandableBarStyle";
 import { usePlayerBarAnimation } from "./hooks/usePlayerBarAnimation";
 
-export default function ExpandablePlayerBar() {
+export function ExpandablePlayerBar() {
   const { theme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { artworkColor, isPlayerReady, setIsExpanded, currentTrack, isExpanded } = usePlayer();

@@ -1,4 +1,4 @@
-import { ScrollView, Text, Pressable, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 const tabs = [
   { id: 'home', title: 'For You' },
@@ -12,7 +12,7 @@ type TabBarProps = {
   onTabPress: (tabId: string) => void;
 };
 
-export default function TabBar({ activeTab, onTabPress }: TabBarProps) {
+export function TabBar({ activeTab, onTabPress }: TabBarProps) {
   return (
     <View>
       <ScrollView

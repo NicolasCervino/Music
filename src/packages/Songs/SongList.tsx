@@ -1,182 +1,107 @@
-import { SeeAll, Text } from '@/components/atoms';
+import { Text } from '@/components/atoms';
+import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
-import { useCurrentTrack, usePlayerControls, useTracks } from '@/features/player';
 import { FlashList } from '@shopify/flash-list';
-import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useMemo } from 'react';
+import { View } from 'react-native';
+import { ListFooter } from './components/ListFooter';
+import { SongListSkeleton } from './components/skeleton/SongListSkeleton';
+import { SongListHeader } from './components/SongListHeader';
 import { TrackBanner } from './components/TrackBanner';
+import { useSongList } from './hooks/useSongList';
+import { utils } from './utils';
 
 const ITEM_HEIGHT = 76;
 
-// Simple hash function for generating unique keys
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash.toString(36);
+export function SongList({
+   ListHeaderComponent,
+}: {
+   ListHeaderComponent?: React.ComponentType<any>;
+}) {
+   const {
+      songs,
+      activeTrackId,
+      currentTrack,
+      isLoading,
+      isError,
+      isFetchingNextPage,
+      hasNextPage,
+      handlePlayTrack,
+      handleEndReached,
+   } = useSongList();
+
+   const isVisible = !!currentTrack;
+   const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
+
+   const containerStyle = useMemo(() => ({ flex: 1, paddingBottom: listPadding }), [listPadding]);
+
+   const ListHeader = useMemo(
+      () => <SongListHeader ListHeaderComponent={ListHeaderComponent} />,
+      [ListHeaderComponent]
+   );
+
+   const keyExtractor = useCallback((item: Track) => {
+      return `track-${utils.hashString(item.id)}-${item.title}`;
+   }, []);
+
+   const renderItem = useCallback(
+      ({ item: track }: { item: Track }) => {
+         const isActive = track.id === activeTrackId;
+
+         return (
+            <TrackBanner track={track} isActive={isActive} onPress={() => handlePlayTrack(track)} />
+         );
+      },
+      [activeTrackId, handlePlayTrack]
+   );
+
+   if (isError) {
+      return (
+         <View
+            style={{
+               padding: 16,
+               alignItems: 'center',
+               flexDirection: 'row',
+               justifyContent: 'center',
+            }}
+         >
+            <Text>Error loading songs</Text>
+         </View>
+      );
+   }
+
+   return (
+      <View style={containerStyle}>
+         <ErrorBoundary
+            isLoading={isLoading}
+            fallback={<SongListSkeleton ListHeader={ListHeader} count={8} />}
+         >
+            <FlashList
+               estimatedItemSize={ITEM_HEIGHT}
+               ListHeaderComponent={ListHeader}
+               ListHeaderComponentStyle={{ paddingHorizontal: 10 }}
+               data={songs}
+               renderItem={renderItem}
+               onEndReached={handleEndReached}
+               onEndReachedThreshold={0.5}
+               extraData={activeTrackId}
+               ListFooterComponent={
+                  <ListFooter
+                     isLoadingMore={isFetchingNextPage}
+                     hasMore={!!hasNextPage}
+                     songsLength={songs.length}
+                  />
+               }
+               showsVerticalScrollIndicator={false}
+               contentContainerStyle={{ paddingHorizontal: 10 }}
+               drawDistance={ITEM_HEIGHT * 10}
+               maintainVisibleContentPosition={{
+                  minIndexForVisible: 0,
+               }}
+               keyExtractor={keyExtractor}
+            />
+         </ErrorBoundary>
+      </View>
+   );
 }
-
-// Memoize the footer component
-const ListFooter = memo(({ isLoadingMore, hasMore, songsLength }: { 
-  isLoadingMore: boolean; 
-  hasMore: boolean; 
-  songsLength: number;
-}) => {
-  if (isLoadingMore) {
-    return (
-      <View style={styles.footer}>
-        <Text>Loading more songs...</Text>
-      </View>
-    );
-  }
-  if (!hasMore && songsLength > 0) {
-    return (
-      <View style={styles.footer}>
-        <Text>No more songs</Text>
-      </View>
-    );
-  }
-  return null;
-});
-
-export function SongList({ ListHeaderComponent }: { ListHeaderComponent?: React.ComponentType<any> }) {
-  // 1. Group all hooks at the top
-  const { data: currentTrack } = useCurrentTrack();
-  const { 
-    data: tracksData, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage,
-    isLoading,
-    isError
-  } = useTracks();
-  const controls = usePlayerControls();
-  
-  const activeTrackId = currentTrack?.id;
-
-  // 2. Move all memoized values together
-  const songs = useMemo(() => {
-    if (!tracksData?.pages) return [];
-    
-    // Remove duplicates by ID
-    const uniqueSongs = new Map<string, Track>();
-    tracksData.pages.forEach(page => {
-      page.tracks.forEach(track => {
-        if (!uniqueSongs.has(track.id)) {
-          uniqueSongs.set(track.id, track);
-        }
-      });
-    });
-    
-    return Array.from(uniqueSongs.values());
-  }, [tracksData?.pages]);
-
-  const isVisible = !!currentTrack;
-  const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
-
-  const containerStyle = useMemo(() => [
-    styles.container,
-    { paddingBottom: listPadding }
-  ], [listPadding]);
-
-  const ListHeader = useMemo(() => (
-    <View style={styles.listContent}>
-      {ListHeaderComponent && <ListHeaderComponent />}
-      <View style={styles.sectionHeader}>
-        <Text variant="heading">Song List</Text>
-        <SeeAll />
-      </View>
-    </View>
-  ), [ListHeaderComponent]);
-
-  // Create a truly unique key for each item
-  const keyExtractor = useCallback((item: Track) => {
-    const baseKey = `track-${hashString(item.id)}-${item.title}`;
-    return baseKey;
-  }, []);
-
-  const renderItem = useCallback(({ item: track }: { item: Track }) => {
-    const isActive = track.id === activeTrackId;
-    
-    return (
-      <TrackBanner
-        track={track}
-        isActive={isActive}
-        onPress={() => {
-          if (track.id !== activeTrackId) {
-            controls.playTrack({ track, allTracks: songs });
-          }
-        }}
-      />
-    );
-  }, [activeTrackId, controls, songs]);
-
-  const handleEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage().catch(error => {
-        console.error('Error fetching next page:', error);
-      });
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  if (isError) {
-    return (
-      <View style={styles.footer}>
-        <Text>Error loading songs</Text>
-      </View>
-    );
-  }
-
-
-  return (
-    <View style={containerStyle}>
-      <FlashList
-        estimatedItemSize={ITEM_HEIGHT}
-        ListHeaderComponent={ListHeader}
-        ListHeaderComponentStyle={styles.listContent}
-        data={songs}
-        renderItem={renderItem}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        extraData={activeTrackId}
-        ListFooterComponent={
-          <ListFooter 
-            isLoadingMore={isFetchingNextPage} 
-            hasMore={!!hasNextPage} 
-            songsLength={songs.length} 
-          />
-        }
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        drawDistance={ITEM_HEIGHT * 10}
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-        }}
-        keyExtractor={keyExtractor}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  listContent: {
-    paddingHorizontal: 10,
-  },
-  footer: {
-    padding: 16,
-    alignItems: 'center',
-  },
-});
