@@ -9,4 +9,6 @@ export type Track = {
   artwork: string | undefined;
   audioUrl: string;
   artworkColor?: string;
+  lastModified?: number;
+  fileSize?: number;
 };

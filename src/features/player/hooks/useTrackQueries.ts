@@ -14,12 +14,14 @@ export function useTracks() {
   return useInfiniteQuery({
     queryKey: ['tracks'],
     queryFn: async ({ pageParam = 0 }) => {
-      const result = await MusicService.getAllTracks(pageParam);
-      return result;
+      return await MusicService.getAllTracks(pageParam);
     },
     getNextPageParam: (lastPage, allPages) => {
-      if (!lastPage.hasMore) return undefined;
-      return allPages.length; // This will be the next page number
+      if (!lastPage.hasMore) {
+        return undefined;
+      }
+      const nextPage = allPages.length;
+      return nextPage; // This will be the next page number
     },
     initialPageParam: 0,
     staleTime: STALE_TIME,

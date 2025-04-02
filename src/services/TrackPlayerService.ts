@@ -62,32 +62,40 @@ export const PlayerService = {
   },
 
   playTrack: async (track: Track, allTracks: Track[], startIndex?: number): Promise<void> => {
-    if (!isInitialized) {
-      await PlayerService.setupPlayer();
+    try {
+      if (!isInitialized) {
+        await PlayerService.setupPlayer();
+      }
+
+      const trackIndex = startIndex ?? allTracks.findIndex(t => t.id === track.id);
+      if (trackIndex === -1) {
+        console.error(`[PLAYER] Track not found in allTracks array: ${track.id}`);
+        return;      
+      }
+      
+      await TrackPlayer.reset();
+
+      const queue = allTracks.map(track => {
+        const audioUrl = track.audioUrl || track.url || '';
+        return {
+          id: track.id,
+          url: audioUrl,
+          title: track.title,
+          artist: track.artist,
+          artwork: track.artwork ? (track.artwork as string) : undefined,
+          duration: parseInt(track.duration) || 0,
+          album: track.album,
+          genre: track.genre,
+          artworkColor: track.artworkColor
+        };
+      });
+
+      await TrackPlayer.add(queue);
+      await TrackPlayer.skip(trackIndex);
+      await PlayerService.play();
+    } catch (error) {
+      console.error('[PLAYER] Error playing track:', error);
     }
-
-    // Find track index if not provided
-    const trackIndex = startIndex ?? allTracks.findIndex(t => t.id === track.id);
-    if (trackIndex === -1) return;
-
-    // Reset queue and add all tracks
-    await TrackPlayer.reset();
-    
-    const queue = allTracks.map(track => ({
-      id: track.id, // Important! Use the exact same ID as in the Track object
-      url: track.audioUrl,
-      title: track.title,
-      artist: track.artist,
-      artwork: track.artwork,
-      duration: parseInt(track.duration) || 0,
-      album: track.album,
-      genre: track.genre,
-      artworkColor: track.artworkColor
-    }));
-
-    await TrackPlayer.add(queue);
-    await TrackPlayer.skip(trackIndex);
-    await PlayerService.play();
   },
 
   skipToNext: async (): Promise<void> => {
@@ -99,25 +107,29 @@ export const PlayerService = {
   },
 
   getCurrentTrack: async (): Promise<Track | null> => {
-    const trackIndex = await TrackPlayer.getCurrentTrack();
-    if (trackIndex === null) return null;
-    
-    const trackData = await TrackPlayer.getTrack(trackIndex);
-    if (!trackData) return null;
-    
-    // Mantener el ID exactamente como está en el reproductor
-    return {
-      id: trackData.id as string,
-      url: trackData.url as string,
-      title: trackData.title as string,
-      artist: trackData.artist as string,
-      artwork: trackData.artwork as string,
-      duration: trackData.duration?.toString() || '--:--',
-      audioUrl: trackData.url as string,
-      album: trackData.album as string,
-      genre: trackData.genre as string,
-      artworkColor: trackData.artworkColor as string,
-    };
+    try {
+      const trackIndex = await TrackPlayer.getCurrentTrack();
+      if (trackIndex === null) return null;
+      
+      const trackData = await TrackPlayer.getTrack(trackIndex);
+      if (!trackData) return null;
+      
+      return {
+        id: trackData.id as string,
+        url: trackData.url as string,
+        title: trackData.title as string,
+        artist: trackData.artist as string,
+        artwork: trackData.artwork ? (trackData.artwork as string) : undefined,
+        duration: trackData.duration?.toString() || '--:--',
+        audioUrl: trackData.url as string,
+        album: trackData.album as string,
+        genre: trackData.genre as string,
+        artworkColor: trackData.artworkColor as string,
+      };
+    } catch (error) {
+      console.error('[PLAYER] Error getting current track:', error);
+      return null;
+    }
   },
 
   toggleRepeatMode: async (): Promise<RepeatMode> => {

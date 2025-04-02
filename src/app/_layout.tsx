@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { queryClient } from '../clients/queryClient';
+import { MusicService } from '../services/MusicMetadataService';
 import { PlayerService } from '../services/TrackPlayerService';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -21,16 +22,17 @@ export default function RootLayout() {
   useEffect(() => {
     let mounted = true;
 
-    const initializePlayer = async () => {
+    const initializeApp = async () => {
       try {
         await PlayerService.setupPlayer();
+        await MusicService.initialize();
       } catch (error) {
-        console.error('Error initializing player:', error);
+        console.error('Error initializing app:', error);
       }
     };
 
     if (mounted) {
-      initializePlayer();
+      initializeApp();
     }
 
     return () => {

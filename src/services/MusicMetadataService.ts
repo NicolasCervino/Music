@@ -2,44 +2,72 @@ import { Track } from '@/entities';
 import * as MediaLibrary from 'expo-media-library';
 import { getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
 import { ColorService } from './CacheColorService';
+import { DatabaseService } from './DatabaseService';
 
 const PAGE_SIZE = 100;
-const MAX_PAGES = 10; // Para encontrar más canciones
+const MAX_PAGES = 50;
+const BATCH_SIZE = 100;
 
-const EXCLUDED_PATHS = [
-  '/storage/emulated/0/WhatsApp',
-  '/storage/emulated/0/PowerDirector',
-  'storage/emulated/0/bluetooth',
-  '/storage/emulated/0/zedge'
+// Folders to explicitly include
+const MUSIC_DIRECTORIES = [
+  '/storage/emulated/0/Music',
+  '/storage/emulated/0/Download',
+  '/sdcard/Music',
+  '/storage/sdcard0/Music',
+  '/storage/sdcard1/Music',
 ];
 
-// Improved hash function that produces consistent results across app sessions
-const stableHash = (str: string): string => {
-  // Normalize the URL for better consistency
-  const normalizedStr = str.toLowerCase().trim();
+// Patterns and paths to exclude from music scanning
+const EXCLUDED_PATTERNS = [
+  // Paths
+  '/storage/emulated/0/WhatsApp',
+  '/storage/emulated/0/Android/media/com.whatsapp',
+  '/storage/emulated/0/PowerDirector',
+  '/storage/emulated/0/bluetooth',
+  '/storage/emulated/0/zedge',
+  '/storage/emulated/0/Telegram',
+  '/storage/emulated/0/Android/data/com.whatsapp',
   
-  // Use a simple but consistent hashing algorithm
+  // Keywords
+  'whatsapp',
+  'telegram',
+  'voice message',
+  'ptt',
+  'status',
+  'notification',
+  'ringtone'
+];
+
+// WhatsApp audio pattern regex
+const WHATSAPP_AUDIO_PATTERN = /aud-\d{8}-wa\d{4}/i;
+
+// Utils
+const stableHash = (str: string): string => {
+  const normalizedStr = str.toLowerCase().trim();
   let hash = 0;
+  
   if (normalizedStr.length === 0) return hash.toString(36);
   
   for (let i = 0; i < normalizedStr.length; i++) {
     const char = normalizedStr.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
   
-  // Make it positive and convert to base 36 (alphanumeric) for shorter IDs
   return Math.abs(hash).toString(36);
 };
 
-// Generate a unique ID for each track - use just the URL as the primary key
 const generateTrackId = (url: string): string => {
-  // Remove common path prefixes and suffixes that might cause inconsistency
-  const cleanUrl = url
-    .replace('/storage/emulated/0/', '') // Remove common path prefix
-    .split('?')[0]; // Remove any query parameters
-    
+  const cleanUrl = url.replace('/storage/emulated/0/', '').split('?')[0];
   return `track-${stableHash(cleanUrl)}`;
+};
+
+// Check if track should be excluded based on URL
+const shouldExcludeTrack = (url: string): boolean => {
+  const lowerUrl = url.toLowerCase();
+  
+  return EXCLUDED_PATTERNS.some(pattern => lowerUrl.includes(pattern)) || 
+         WHATSAPP_AUDIO_PATTERN.test(lowerUrl);
 };
 
 export const MusicService = {
@@ -50,71 +78,105 @@ export const MusicService = {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   },
 
+  initialize: async (): Promise<void> => {
+    try {
+      await DatabaseService.initDatabase();
+    } catch (error) {
+      console.error('Error initializing music service:', error);
+    }
+  },
+
   getAllTracks: async (page: number = 0): Promise<{ tracks: Track[], hasMore: boolean }> => {
     try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        throw new Error('Permission not granted');
+      await MusicService.initialize();
+      
+      if (await DatabaseService.hasStoredTracks()) {
+        const { tracks: dbTracks, total } = await DatabaseService.getPagedTracks(page, PAGE_SIZE);
+        
+        // Filter out unwanted tracks
+        const tracks = dbTracks.filter(track => !shouldExcludeTrack(track.url || ''));
+        
+        // Check if we need to rescan due to many filtered tracks
+        if (dbTracks.length - tracks.length > 10 && page === 0) {
+          setTimeout(() => {
+            MusicService.rescanTracks().catch(e => 
+              console.error('Error during background rescan:', e)
+            );
+          }, 5000);
+        }
+        
+        const hasMore = (page + 1) * PAGE_SIZE < (total - (dbTracks.length - tracks.length));
+        return { tracks, hasMore };
       }
       
-      const BATCH_SIZE = 100;
-      let accumulatedSongs: any[] = [];
-      let currentInternalPage = 0;
-      let hasMoreInternal = true;
+      return await MusicService.scanAndSaveTracks(page);
+    } catch (error) {
+      console.error('Error getting tracks:', error);
+      return await MusicService.scanAndSaveTracks(page);
+    }
+  },
+  
+  scanAndSaveTracks: async (page: number = 0): Promise<{ tracks: Track[], hasMore: boolean }> => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') throw new Error('Permission not granted');
       
-      while (accumulatedSongs.length < PAGE_SIZE && currentInternalPage < MAX_PAGES && hasMoreInternal) {
-        const offset = (page * PAGE_SIZE) + (currentInternalPage * BATCH_SIZE);
+      const scanMethods = [
+        { sortBy: SortSongFields.TITLE, sortOrder: SortSongOrder.ASC },
+        { sortBy: SortSongFields.ARTIST, sortOrder: SortSongOrder.ASC },
+        { sortBy: SortSongFields.DURATION, sortOrder: SortSongOrder.DESC }
+      ];
+      
+      let allSongs: any[] = [];
+      
+      // Collect unique songs using different sort methods
+      for (const method of scanMethods) {
+        let currentPage = 0;
+        let hasMore = true;
         
-        const batchSongsOrError = await getAll({
-          coverQuality: 50,
-          minSongDuration: 1000,
-          sortBy: SortSongFields.TITLE,
-          sortOrder: SortSongOrder.ASC,
-          offset: offset,
-          limit: BATCH_SIZE,
-        });
-        
-        if (typeof batchSongsOrError === 'string') {
-          console.error('Error getting music files:', batchSongsOrError);
-          break;
-        }
-        
-        if (batchSongsOrError.length === 0) {
-          hasMoreInternal = false;
-          break;
-        }
-        
-        accumulatedSongs = [...accumulatedSongs, ...batchSongsOrError];
-        currentInternalPage++;
-        
-        if (batchSongsOrError.length < BATCH_SIZE) {
-          hasMoreInternal = false;
+        while (currentPage < MAX_PAGES && hasMore) {
+          const offset = currentPage * BATCH_SIZE;
+          
+          const batchSongsOrError = await getAll({
+            coverQuality: 50,
+            minSongDuration: 1000,
+            sortBy: method.sortBy,
+            sortOrder: method.sortOrder,
+            offset: offset,
+            limit: BATCH_SIZE,
+          });
+          
+          if (typeof batchSongsOrError === 'string') {
+            console.error('Error getting music files:', batchSongsOrError);
+            break;
+          }
+          
+          if (batchSongsOrError.length === 0) {
+            hasMore = false;
+            break;
+          }
+          
+          // Add only unique songs
+          for (const song of batchSongsOrError) {
+            if (!allSongs.some(existing => existing.url === song.url)) {
+              allSongs.push(song);
+            }
+          }
+          
+          currentPage++;
+          hasMore = batchSongsOrError.length === BATCH_SIZE;
         }
       }
     
-      const filteredSongs = accumulatedSongs.filter(song => {
-        return !EXCLUDED_PATHS.some(path => 
-          (song.url || '').toLowerCase().includes(path.toLowerCase())
-        );
-      });
+      // Filter out excluded tracks
+      const filteredSongs = allSongs.filter(song => !shouldExcludeTrack(song.url || ''));
 
-      const hasMore = hasMoreInternal || (filteredSongs.length > PAGE_SIZE);
-      const songsToProcess = filteredSongs.slice(0, PAGE_SIZE);
-      
-      // Create a map to track processed songs and avoid duplicates
-      const processedSongs = new Map<string, boolean>();
-      
-      const tracks = await Promise.all(songsToProcess.map(async (song): Promise<Track> => {
-        let artworkColor = '';
-        if (song.cover) {
-          artworkColor = await ColorService.getStoredColor(song.url) || '';
-        }
-
-        // Generate a unique ID based only on URL
-        const uniqueId = generateTrackId(song.url);
-        
+      // Process songs to tracks format
+      const processedUrls = new Set<string>();
+      const allTracks = await Promise.all(filteredSongs.map(async (song): Promise<Track> => {
+        const artworkColor = song.cover ? (await ColorService.getStoredColor(song.url) || '') : '';
         return {
-          id: uniqueId,
+          id: generateTrackId(song.url),
           url: song.url,
           title: song.title || 'Unknown Title',
           album: song.album || 'Unknown Album',
@@ -123,23 +185,56 @@ export const MusicService = {
           genre: song.genre || '',
           artwork: song.cover || undefined,
           audioUrl: song.url,
-          artworkColor
+          artworkColor,
+          lastModified: song.lastModified || null,
+          fileSize: song.fileSize || null
         };
       }));
 
-      // Filter out any duplicate tracks
-      const uniqueTracks = tracks.filter(track => {
-        if (processedSongs.has(track.url || '')) {
-          return false;
-        }
-        processedSongs.set(track.url || '', true);
+      // Filter out duplicates
+      const uniqueTracks = allTracks.filter(track => {
+        if (processedUrls.has(track.url || '')) return false;
+        processedUrls.add(track.url || '');
         return true;
       });
 
-      return { tracks: uniqueTracks, hasMore };
+      // Save tracks to database
+      await DatabaseService.saveTracks(uniqueTracks);
+
+      // Return requested page
+      const startIdx = page * PAGE_SIZE;
+      const endIdx = startIdx + PAGE_SIZE;
+      const pageOfTracks = uniqueTracks.slice(startIdx, endIdx);
+      
+      return { 
+        tracks: pageOfTracks, 
+        hasMore: endIdx < uniqueTracks.length 
+      };
     } catch (error) {
-      console.error('Error getting tracks:', error);
+      console.error('Error scanning tracks:', error);
       return { tracks: [], hasMore: false };
+    }
+  },
+  
+  rescanTracks: async (): Promise<void> => {
+    try {
+      await DatabaseService.clearTracks();
+      
+      // Try to access specific directories
+      for (const directory of MUSIC_DIRECTORIES) {
+        try {
+          await MediaLibrary.getAssetsAsync({
+            mediaType: MediaLibrary.MediaType.audio,
+            first: 10
+          });
+        } catch (error) {
+          console.error(`Error accessing ${directory}:`, error);
+        }
+      }
+      
+      await MusicService.scanAndSaveTracks(0);
+    } catch (error) {
+      console.error('Error rescanning tracks:', error);
     }
   }
 };
