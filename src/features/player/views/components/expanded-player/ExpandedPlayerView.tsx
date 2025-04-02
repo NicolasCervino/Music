@@ -1,18 +1,18 @@
 import { Text } from '@/components/atoms';
-import { ProgressSlider } from '@/packages/MusicPlayer/components/ProgressSlider.tsx/ProgressSlider';
-import { usePlayer } from '@/packages/MusicPlayer/hooks/usePlayer';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { RepeatMode } from 'react-native-track-player';
+import { usePlayer } from '../../../hooks/usePlayer';
+import { ProgressSlider } from '../progress-slider/ProgressSlider';
 
 type PlayerViewProps = {
    backgroundColor: string;
    isReady: boolean;
 };
 
-export default function ExpandedPlayerView({ backgroundColor, isReady }: PlayerViewProps) {
+export function ExpandedPlayerView({ backgroundColor, isReady }: PlayerViewProps) {
    const {
       currentTrack,
       isPlaying,

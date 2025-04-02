@@ -1,5 +1,4 @@
 import { Text } from '@/components/atoms';
-import { useProgress } from '@/packages/MusicPlayer/hooks/useProgress';
 import { useEffect } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -9,7 +8,8 @@ import Animated, {
    useSharedValue,
    withTiming,
 } from 'react-native-reanimated';
-import { usePlayer } from '../../hooks/usePlayer';
+import { usePlayer } from '../../../hooks/usePlayer';
+import { useProgress } from './hooks/useProgress';
 
 const SLIDER_WIDTH = Dimensions.get('window').width - 40;
 
