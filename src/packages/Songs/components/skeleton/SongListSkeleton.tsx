@@ -6,10 +6,9 @@ import { TrackSkeleton } from './TrackSkeleton';
 
 interface SongListSkeletonProps {
    count?: number;
-   ListHeader?: React.ReactNode;
 }
 
-export const SongListSkeleton = React.memo(({ count = 8, ListHeader }: SongListSkeletonProps) => {
+export const SongListSkeleton = React.memo(({ count = 8 }: SongListSkeletonProps) => {
    const { theme } = useTheme();
 
    return (
@@ -24,7 +23,6 @@ export const SongListSkeleton = React.memo(({ count = 8, ListHeader }: SongListS
                This might take a while...
             </Text>
          </View>
-         {ListHeader}
          {Array.from({ length: count }).map((_, index) => (
             <TrackSkeleton key={`skeleton-${index}`} />
          ))}

@@ -15,9 +15,9 @@ import { utils } from './utils';
 const ITEM_HEIGHT = 76;
 
 export function SongList({
-   ListHeaderComponent,
+   listHeaderComponent,
 }: {
-   ListHeaderComponent?: React.ComponentType<any>;
+   listHeaderComponent?: React.ComponentType<any>;
 }) {
    const {
       songs,
@@ -37,8 +37,8 @@ export function SongList({
    const containerStyle = useMemo(() => ({ flex: 1, paddingBottom: listPadding }), [listPadding]);
 
    const ListHeader = useMemo(
-      () => <SongListHeader ListHeaderComponent={ListHeaderComponent} />,
-      [ListHeaderComponent]
+      () => <SongListHeader ListHeaderComponent={listHeaderComponent} />,
+      [listHeaderComponent]
    );
 
    const keyExtractor = useCallback((item: Track) => {
