@@ -1,14 +1,20 @@
-import { SeeAll, Text } from '@/components/atoms';
+import { ShufflePlay, Text } from '@/components/atoms';
 import { View } from 'react-native';
 
 interface SongListHeaderProps {
-   ListHeaderComponent?: React.ComponentType<any>;
+   renderHeader?: () => React.ReactNode;
+   onShufflePlay?: () => void;
+   songsAvailable?: boolean;
 }
 
-export const SongListHeader = ({ ListHeaderComponent }: SongListHeaderProps) => {
+export const SongListHeader = ({
+   renderHeader,
+   onShufflePlay,
+   songsAvailable = false,
+}: SongListHeaderProps) => {
    return (
       <View style={{ paddingHorizontal: 10 }}>
-         {ListHeaderComponent && <ListHeaderComponent />}
+         {renderHeader && renderHeader()}
          <View
             style={{
                flexDirection: 'row',
@@ -18,7 +24,7 @@ export const SongListHeader = ({ ListHeaderComponent }: SongListHeaderProps) => 
             }}
          >
             <Text variant="heading">Song List</Text>
-            <SeeAll />
+            <ShufflePlay onPress={onShufflePlay} disabled={!songsAvailable} />
          </View>
       </View>
    );

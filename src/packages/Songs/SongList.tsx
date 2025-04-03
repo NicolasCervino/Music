@@ -9,37 +9,29 @@ import { ListFooter } from './components/ListFooter';
 import { SongListSkeleton } from './components/skeleton/SongListSkeleton';
 import { SongListHeader } from './components/SongListHeader';
 import { TrackBanner } from './components/TrackBanner';
-import { useSongList } from './hooks/useSongList';
+import { SongListHookResult } from './hooks/useSongList';
 import { utils } from './utils';
 
 const ITEM_HEIGHT = 76;
 
-export function SongList({
-   listHeaderComponent,
-}: {
-   listHeaderComponent?: React.ComponentType<any>;
-}) {
-   const {
-      songs,
-      activeTrackId,
-      currentTrack,
-      isLoading,
-      isError,
-      isFetchingNextPage,
-      hasNextPage,
-      handlePlayTrack,
-      handleEndReached,
-   } = useSongList();
+export interface SongListProps extends SongListHookResult {
+   renderHeader?: () => React.ReactNode;
+}
 
-   const isVisible = !!currentTrack;
-   const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
+export function SongList({
+   songs,
+   activeTrackId,
+   isPlayerVisible,
+   isLoading,
+   isError,
+   pagination,
+   onPlayTrack,
+   onShufflePlay,
+   renderHeader,
+}: SongListProps) {
+   const listPadding = isPlayerVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
 
    const containerStyle = useMemo(() => ({ flex: 1, paddingBottom: listPadding }), [listPadding]);
-
-   const ListHeader = useMemo(
-      () => <SongListHeader ListHeaderComponent={listHeaderComponent} />,
-      [listHeaderComponent]
-   );
 
    const keyExtractor = useCallback((item: Track) => {
       return `track-${utils.hashString(item.id)}-${item.title}`;
@@ -50,10 +42,10 @@ export function SongList({
          const isActive = track.id === activeTrackId;
 
          return (
-            <TrackBanner track={track} isActive={isActive} onPress={() => handlePlayTrack(track)} />
+            <TrackBanner track={track} isActive={isActive} onPress={() => onPlayTrack(track)} />
          );
       },
-      [activeTrackId, handlePlayTrack]
+      [activeTrackId, onPlayTrack]
    );
 
    if (isError) {
@@ -76,17 +68,23 @@ export function SongList({
          <ErrorBoundary isLoading={isLoading} fallback={<SongListSkeleton count={8} />}>
             <FlashList
                estimatedItemSize={ITEM_HEIGHT}
-               ListHeaderComponent={ListHeader}
+               ListHeaderComponent={
+                  <SongListHeader
+                     renderHeader={renderHeader}
+                     onShufflePlay={onShufflePlay}
+                     songsAvailable={songs.length > 0}
+                  />
+               }
                ListHeaderComponentStyle={{ paddingHorizontal: 10 }}
                data={songs}
                renderItem={renderItem}
-               onEndReached={handleEndReached}
+               onEndReached={pagination.onLoadMore}
                onEndReachedThreshold={0.5}
                extraData={activeTrackId}
                ListFooterComponent={
                   <ListFooter
-                     isLoadingMore={isFetchingNextPage}
-                     hasMore={!!hasNextPage}
+                     isLoadingMore={pagination.isFetching}
+                     hasMore={!!pagination.hasMore}
                      songsLength={songs.length}
                   />
                }

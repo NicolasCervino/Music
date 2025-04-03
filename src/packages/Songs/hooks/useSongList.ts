@@ -1,8 +1,23 @@
 import { Track } from '@/entities';
 import { useCurrentTrack, usePlayerControls, useTracks } from '@/features/player';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
-export const useSongList = () => {
+export interface SongListHookResult {
+   songs: Track[];
+   activeTrackId: string | undefined;
+   isPlayerVisible: boolean;
+   isLoading: boolean;
+   isError: boolean;
+   pagination: {
+      isFetching: boolean;
+      hasMore: boolean | undefined;
+      onLoadMore: () => void;
+   };
+   onPlayTrack: (track: Track) => void;
+   onShufflePlay: () => void;
+}
+
+export const useSongList = (): SongListHookResult => {
    const { data: currentTrack } = useCurrentTrack();
    const {
       data: tracksData,
@@ -15,6 +30,7 @@ export const useSongList = () => {
    const controls = usePlayerControls();
 
    const activeTrackId = currentTrack?.id;
+   const isPlayerVisible = !!currentTrack;
 
    const songs = useMemo(() => {
       if (!tracksData?.pages) return [];
@@ -31,13 +47,13 @@ export const useSongList = () => {
       return Array.from(uniqueSongs.values());
    }, [tracksData?.pages]);
 
-   const handlePlayTrack = (track: Track) => {
+   const onPlayTrack = (track: Track) => {
       if (track.id !== activeTrackId) {
          controls.playTrack({ track, allTracks: songs });
       }
    };
 
-   const handleEndReached = () => {
+   const onLoadMore = () => {
       if (hasNextPage && !isFetchingNextPage) {
          fetchNextPage().catch(error => {
             console.error('Error fetching next page:', error);
@@ -45,15 +61,27 @@ export const useSongList = () => {
       }
    };
 
+   const onShufflePlay = useCallback(() => {
+      if (songs.length === 0) return;
+      const shuffledSongs = [...songs].sort(() => Math.random() - 0.5);
+      controls.playTrack({
+         track: shuffledSongs[0],
+         allTracks: shuffledSongs,
+      });
+   }, [songs, controls]);
+
    return {
       songs,
-      currentTrack,
       activeTrackId,
+      isPlayerVisible,
       isLoading,
       isError,
-      isFetchingNextPage,
-      hasNextPage,
-      handlePlayTrack,
-      handleEndReached,
+      pagination: {
+         isFetching: isFetchingNextPage,
+         hasMore: hasNextPage,
+         onLoadMore,
+      },
+      onPlayTrack,
+      onShufflePlay,
    };
 };
