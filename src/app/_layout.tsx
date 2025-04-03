@@ -15,60 +15,60 @@ import { PlayerService } from '../services/TrackPlayerService';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+   const [loaded] = useFonts({
+      SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+   });
 
-  useEffect(() => {
-    let mounted = true;
+   useEffect(() => {
+      let mounted = true;
 
-    const initializeApp = async () => {
-      try {
-        await PlayerService.setupPlayer();
-        await MusicService.initialize();
-      } catch (error) {
-        console.error('Error initializing app:', error);
+      const initializeApp = async () => {
+         try {
+            await PlayerService.setupPlayer();
+            await MusicService.initialize();
+         } catch (error) {
+            console.error('Error initializing app:', error);
+         }
+      };
+
+      if (mounted) {
+         initializeApp();
       }
-    };
 
-    if (mounted) {
-      initializeApp();
-    }
+      return () => {
+         mounted = false;
+      };
+   }, []);
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+   useEffect(() => {
+      if (loaded) {
+         SplashScreen.hideAsync();
+      }
+   }, [loaded]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+   if (!loaded) {
+      return null;
+   }
 
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <QueryClientProvider client={queryClient}>
-    <CustomThemeProvider>
-      <NavigationWrapper />
-    </CustomThemeProvider>
-    </QueryClientProvider>
-  );
+   return (
+      <QueryClientProvider client={queryClient}>
+         <CustomThemeProvider>
+            <NavigationWrapper />
+         </CustomThemeProvider>
+      </QueryClientProvider>
+   );
 }
 
 function NavigationWrapper() {
-  const { theme } = useTheme();
+   const { theme } = useTheme();
 
-  return (
-    <ThemeProvider value={theme.dark ? DarkTheme : DefaultTheme}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </GestureHandlerRootView>
-    </ThemeProvider>
-  );
+   return (
+      <ThemeProvider value={theme.dark ? DarkTheme : DefaultTheme}>
+         <GestureHandlerRootView style={{ flex: 1 }}>
+            <Stack screenOptions={{ headerShown: false }}>
+               <Stack.Screen name="index" />
+            </Stack>
+         </GestureHandlerRootView>
+      </ThemeProvider>
+   );
 }
