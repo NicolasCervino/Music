@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { queryClient } from '../clients/queryClient';
-import { MusicService } from '../services/MusicMetadataService';
+import { MusicService } from '../services/music-metadata/MusicMetadataService';
 import { PlayerService } from '../services/TrackPlayerService';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
