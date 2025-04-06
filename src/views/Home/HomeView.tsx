@@ -1,6 +1,6 @@
-import { NewAlbums } from '@/packages/Albums/NewAlbums';
-import { SongList } from '@/packages/Songs/SongList';
+import { PopularAlbums } from '@/features/albums';
 import { useSongList } from '@/packages/Songs/hooks/useSongList';
+import { SongList } from '@/src/packages';
 import { useTheme } from '@/theme';
 import { View } from 'react-native';
 
@@ -10,7 +10,7 @@ export function HomeView() {
 
    return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-         <SongList title="Song List" {...methods} renderHeader={() => <NewAlbums />} />
+         <SongList title="Song List" {...methods} renderHeader={() => <PopularAlbums />} />
       </View>
    );
 }

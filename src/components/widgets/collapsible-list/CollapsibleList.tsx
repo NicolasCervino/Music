@@ -18,6 +18,7 @@ interface CollapsibleListProps<T> {
    bottomPadding?: number;
    expanded?: boolean;
    onExpandToggle?: () => void;
+   numColumns?: number;
 }
 
 export function CollapsibleList<T>({
@@ -34,6 +35,7 @@ export function CollapsibleList<T>({
    bottomPadding = 0,
    expanded: externalExpanded,
    onExpandToggle: externalToggle,
+   numColumns = 1,
 }: CollapsibleListProps<T>) {
    const [internalExpanded, setInternalExpanded] = useState(false);
    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
@@ -85,6 +87,7 @@ export function CollapsibleList<T>({
             <FlashList
                ref={listRef}
                estimatedItemSize={estimatedItemSize}
+               numColumns={numColumns}
                data={displayedItems}
                renderItem={renderItem}
                keyExtractor={keyExtractor}

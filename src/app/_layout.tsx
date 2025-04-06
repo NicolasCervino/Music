@@ -70,6 +70,7 @@ function NavigationWrapper() {
             <Stack screenOptions={{ headerShown: false }}>
                <Stack.Screen name="index" />
                <Stack.Screen name="artist/[id]" options={{ headerShown: false }} />
+               <Stack.Screen name="album/[id]" options={{ headerShown: false }} />
             </Stack>
             {isVisible && <ExpandablePlayerBarView />}
          </GestureHandlerRootView>

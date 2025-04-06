@@ -4,9 +4,9 @@ import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
 import { CollapsibleList } from '@/src/components/widgets';
 import { View } from 'react-native';
-import { SongListSkeleton } from './components/skeleton/SongListSkeleton';
-import { TrackBanner } from './components/TrackBanner';
-import { SongListHookResult } from './hooks/useSongList';
+import { SongListHookResult } from '../hooks/useSongList';
+import { SongListSkeleton } from './skeleton/SongListSkeleton';
+import { TrackBanner } from './TrackBanner';
 
 const ITEM_HEIGHT = 76;
 
