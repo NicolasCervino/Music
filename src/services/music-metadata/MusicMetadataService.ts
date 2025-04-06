@@ -1,85 +1,13 @@
 import { Track } from '@/entities';
+import { Artist } from '@/features/artists';
 import * as MediaLibrary from 'expo-media-library';
 import { getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
-import { ColorService } from './CacheColorService';
-import { DatabaseService } from './DatabaseService';
-
-const PAGE_SIZE = 100;
-const MAX_PAGES = 50;
-const BATCH_SIZE = 100;
-
-// Folders to explicitly include
-const MUSIC_DIRECTORIES = [
-   '/storage/emulated/0/Music',
-   '/storage/emulated/0/Download',
-   '/sdcard/Music',
-   '/storage/sdcard0/Music',
-   '/storage/sdcard1/Music',
-];
-
-// Patterns and paths to exclude from music scanning
-const EXCLUDED_PATTERNS = [
-   // Paths
-   '/storage/emulated/0/WhatsApp',
-   '/storage/emulated/0/Android/media/com.whatsapp',
-   '/storage/emulated/0/PowerDirector',
-   '/storage/emulated/0/bluetooth',
-   '/storage/emulated/0/zedge',
-   '/storage/emulated/0/Telegram',
-   '/storage/emulated/0/Android/data/com.whatsapp',
-
-   // Keywords
-   'whatsapp',
-   'telegram',
-   'voice message',
-   'ptt',
-   'status',
-   'notification',
-   'ringtone',
-];
-
-// WhatsApp audio pattern regex
-const WHATSAPP_AUDIO_PATTERN = /aud-\d{8}-wa\d{4}/i;
-
-// Utils
-const stableHash = (str: string): string => {
-   const normalizedStr = str.toLowerCase().trim();
-   let hash = 0;
-
-   if (normalizedStr.length === 0) return hash.toString(36);
-
-   for (let i = 0; i < normalizedStr.length; i++) {
-      const char = normalizedStr.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash;
-   }
-
-   return Math.abs(hash).toString(36);
-};
-
-const generateTrackId = (url: string): string => {
-   const cleanUrl = url.replace('/storage/emulated/0/', '').split('?')[0];
-   return `track-${stableHash(cleanUrl)}`;
-};
-
-// Check if track should be excluded based on URL
-const shouldExcludeTrack = (url: string): boolean => {
-   const lowerUrl = url.toLowerCase();
-
-   return (
-      EXCLUDED_PATTERNS.some(pattern => lowerUrl.includes(pattern)) ||
-      WHATSAPP_AUDIO_PATTERN.test(lowerUrl)
-   );
-};
+import { ColorService } from '../CacheColorService';
+import { DatabaseService } from '../DatabaseService';
+import { BATCH_SIZE, MAX_PAGES, MUSIC_DIRECTORIES, PAGE_SIZE } from './constants';
+import { musicMetadataUtils } from './utils';
 
 export const MusicService = {
-   formatDuration: (durationMs: number): string => {
-      const totalSeconds = Math.floor(durationMs / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-   },
-
    initialize: async (): Promise<void> => {
       try {
          await DatabaseService.initDatabase();
@@ -99,7 +27,9 @@ export const MusicService = {
             );
 
             // Filter out unwanted tracks
-            const tracks = dbTracks.filter(track => !shouldExcludeTrack(track.url || ''));
+            const tracks = dbTracks.filter(
+               track => !musicMetadataUtils.shouldExcludeTrack(track.url || '')
+            );
 
             // Check if we need to rescan due to many filtered tracks
             if (dbTracks.length - tracks.length > 10 && page === 0) {
@@ -171,7 +101,9 @@ export const MusicService = {
             }
          }
          // Filter out excluded tracks
-         const filteredSongs = allSongs.filter(song => !shouldExcludeTrack(song.url || ''));
+         const filteredSongs = allSongs.filter(
+            song => !musicMetadataUtils.shouldExcludeTrack(song.url || '')
+         );
 
          // Process songs to tracks format
          const processedUrls = new Set<string>();
@@ -181,12 +113,12 @@ export const MusicService = {
                   ? (await ColorService.getStoredColor(song.url)) || ''
                   : '';
                return {
-                  id: generateTrackId(song.url),
+                  id: musicMetadataUtils.generateTrackId(song.url),
                   url: song.url,
                   title: song.title || 'Unknown Title',
                   album: song.album || 'Unknown Album',
                   artist: song.artist || 'Unknown Artist',
-                  duration: MusicService.formatDuration(song.duration),
+                  duration: musicMetadataUtils.formatDuration(song.duration),
                   genre: song.genre || '',
                   artwork: song.cover || undefined,
                   audioUrl: song.url,
@@ -248,6 +180,117 @@ export const MusicService = {
          await MusicService.scanAndSaveTracks(0);
       } catch (error) {
          console.error('Error rescanning tracks:', error);
+      }
+   },
+
+   getArtists: async (): Promise<Artist[]> => {
+      try {
+         // Get all tracks from database
+         const tracks = await DatabaseService.getAllTracks();
+
+         // Create a map to store artist data
+         const artistsMap = new Map<string, Artist>();
+
+         // Process each track
+         tracks.forEach(track => {
+            const artistName = track.artist || 'Unknown Artist';
+
+            // Generate a stable ID for the artist
+            const artistId = `artist-${musicMetadataUtils.stableHash(artistName)}`;
+
+            if (!artistsMap.has(artistId)) {
+               // First time seeing this artist
+               artistsMap.set(artistId, {
+                  id: artistId,
+                  name: artistName,
+                  image: track.artwork || '', // Use first track's artwork
+                  genres: [], // Initialize empty genres array
+               });
+            }
+
+            // Update artist's tracks count & possibly genre info
+            const artist = artistsMap.get(artistId)!;
+
+            // If track has genre and it's not already in artist's genres, add it
+            if (track.genre && !artist.genres.includes(track.genre)) {
+               artist.genres = [...artist.genres, track.genre];
+            }
+         });
+
+         // Convert map to array
+         return Array.from(artistsMap.values());
+      } catch (error) {
+         console.error('Error getting artists:', error);
+         return [];
+      }
+   },
+
+   getPopularArtists: async (limit: number = 3): Promise<Artist[]> => {
+      try {
+         // Get all tracks
+         const tracks = await DatabaseService.getAllTracks();
+
+         // Count tracks per artist
+         const artistTrackCounts = new Map<string, number>();
+         const artistData = new Map<string, Artist>();
+
+         tracks.forEach(track => {
+            const artistName = track.artist || 'Unknown Artist';
+            const artistId = `artist-${musicMetadataUtils.stableHash(artistName)}`;
+
+            // Count tracks
+            artistTrackCounts.set(artistId, (artistTrackCounts.get(artistId) || 0) + 1);
+
+            // Store artist data
+            if (!artistData.has(artistId)) {
+               artistData.set(artistId, {
+                  id: artistId,
+                  name: artistName,
+                  image: track.artwork || '',
+                  genres: track.genre ? [track.genre] : [],
+               });
+            }
+         });
+
+         // Sort artists by track count and get top ones
+         const topArtistIds = [...artistTrackCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, limit)
+            .map(entry => entry[0]);
+
+         // Get artist data for top artists
+         return topArtistIds.map(id => artistData.get(id)!);
+      } catch (error) {
+         console.error('Error getting popular artists:', error);
+         return [];
+      }
+   },
+
+   getArtistById: async (artistId: string) => {
+      try {
+         const artists = await MusicService.getArtists();
+         return artists.find(artist => artist.id === artistId) || null;
+      } catch (error) {
+         console.error('Error getting artist by ID:', error);
+         return null;
+      }
+   },
+
+   getTracksByArtistId: async (artistId: string) => {
+      try {
+         const allTracks = await DatabaseService.getAllTracks();
+         const artist = await MusicService.getArtistById(artistId);
+
+         if (!artist) return [];
+
+         // Filtrar canciones por el nombre del artista
+         return allTracks.filter(track => {
+            const trackArtist = track.artist || '';
+            return trackArtist.toLowerCase() === artist.name.toLowerCase();
+         });
+      } catch (error) {
+         console.error('Error getting tracks by artist ID:', error);
+         return [];
       }
    },
 };

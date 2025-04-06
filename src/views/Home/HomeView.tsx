@@ -1,19 +1,16 @@
 import { NewAlbums } from '@/packages/Albums/NewAlbums';
 import { SongList } from '@/packages/Songs/SongList';
+import { useSongList } from '@/packages/Songs/hooks/useSongList';
 import { useTheme } from '@/theme';
-import { memo, useCallback } from 'react';
 import { View } from 'react-native';
 
-const Header = memo(() => <NewAlbums />);
-
-export default function HomeView() {
+export function HomeView() {
    const { theme } = useTheme();
-
-   const renderHeader = useCallback(() => <Header />, []);
+   const methods = useSongList();
 
    return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-         <SongList listHeaderComponent={renderHeader} />
+         <SongList title="Song List" {...methods} renderHeader={() => <NewAlbums />} />
       </View>
    );
 }
