@@ -1,6 +1,7 @@
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
 import { CollapsibleList } from '@/src/components/widgets';
 import { PLAYER_BAR_HEIGHT } from '@/src/constants/dimensions';
+import { Href, useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { useArtists } from '../../../hooks';
 import { Artist } from '../../../types';
@@ -23,8 +24,14 @@ export function ArtistList({
 }: ArtistListProps): React.ReactElement {
    const { data: artists = [], isLoading } = useArtists();
    const listPadding = PLAYER_BAR_HEIGHT;
+   const router = useRouter();
 
-   const renderArtistItem = ({ item: artist }: { item: Artist }) => <ArtistCard artist={artist} />;
+   const renderArtistItem = ({ item: artist }: { item: Artist }) => (
+      <ArtistCard
+         artist={artist}
+         onPress={() => router.push(`/artist/${artist.id}` as unknown as Href)}
+      />
+   );
 
    const keyExtractor = (item: Artist) => `artist-${item.id}`;
 

@@ -10,7 +10,7 @@ export function HomeView() {
 
    return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-         <SongList {...methods} renderHeader={() => <NewAlbums />} />
+         <SongList title="Song List" {...methods} renderHeader={() => <NewAlbums />} />
       </View>
    );
 }

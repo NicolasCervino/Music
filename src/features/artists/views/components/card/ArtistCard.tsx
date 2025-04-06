@@ -38,11 +38,16 @@ const styles = StyleSheet.create({
    },
 });
 
-export function ArtistCard({ artist }: { artist: Artist }) {
+interface ArtistCardProps {
+   artist: Artist;
+   onPress?: () => void;
+}
+
+export function ArtistCard({ artist, onPress }: ArtistCardProps) {
    const { theme } = useTheme();
 
    return (
-      <Pressable key={artist.id} style={styles.artistListItem}>
+      <Pressable key={artist.id} style={styles.artistListItem} onPress={onPress}>
          <Image source={{ uri: artist.image }} style={styles.artistListImage} contentFit="cover" />
          <View style={styles.artistInfo}>
             <Text variant="subtitle" style={styles.artistName}>

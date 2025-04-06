@@ -16,6 +16,7 @@ export interface SongListProps extends SongListHookResult {
 }
 
 export function SongList({
+   title = '',
    songs,
    activeTrackId,
    isPlayerVisible,
@@ -25,7 +26,7 @@ export function SongList({
    onPlayTrack,
    renderHeader,
    initialVisibleCount = 5,
-}: SongListProps) {
+}: SongListProps & { title?: string }) {
    const listPadding = isPlayerVisible ? PLAYER_BAR_HEIGHT : 0;
 
    const renderSongItem = ({ item: track }: { item: Track }) => (
@@ -56,7 +57,7 @@ export function SongList({
    return (
       <ErrorBoundary isLoading={isLoading} fallback={<SongListSkeleton count={8} />}>
          <CollapsibleList
-            title="Song List"
+            title={title}
             data={songs}
             renderItem={renderSongItem}
             keyExtractor={keyExtractor}

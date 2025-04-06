@@ -39,9 +39,11 @@ export function CollapsibleList<T>({
    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
    const listRef = useRef<FlashList<T>>(null);
 
+   const hasEnoughItems = data.length > initialVisibleCount;
+
    const displayedItems = useMemo(() => {
-      return expanded ? data : data.slice(0, initialVisibleCount);
-   }, [expanded, data, initialVisibleCount]);
+      return !hasEnoughItems || expanded ? data : data.slice(0, initialVisibleCount);
+   }, [expanded, data, initialVisibleCount, hasEnoughItems]);
 
    const toggleExpand = useCallback(() => {
       if (externalToggle) {
@@ -78,7 +80,7 @@ export function CollapsibleList<T>({
                }}
             >
                <Text variant="heading">{title}</Text>
-               <SeeAll onPress={toggleExpand} expanded={expanded} />
+               {hasEnoughItems && <SeeAll onPress={toggleExpand} expanded={expanded} />}
             </View>
             <FlashList
                ref={listRef}

@@ -14,7 +14,7 @@ export interface SongListHookResult {
       onLoadMore: () => void;
    };
    onPlayTrack: (track: Track) => void;
-   onShufflePlay: () => void;
+   onShufflePlay?: () => void;
 }
 
 export const useSongList = (): SongListHookResult => {

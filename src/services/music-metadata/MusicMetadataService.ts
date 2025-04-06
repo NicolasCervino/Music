@@ -265,4 +265,32 @@ export const MusicService = {
          return [];
       }
    },
+
+   getArtistById: async (artistId: string) => {
+      try {
+         const artists = await MusicService.getArtists();
+         return artists.find(artist => artist.id === artistId) || null;
+      } catch (error) {
+         console.error('Error getting artist by ID:', error);
+         return null;
+      }
+   },
+
+   getTracksByArtistId: async (artistId: string) => {
+      try {
+         const allTracks = await DatabaseService.getAllTracks();
+         const artist = await MusicService.getArtistById(artistId);
+
+         if (!artist) return [];
+
+         // Filtrar canciones por el nombre del artista
+         return allTracks.filter(track => {
+            const trackArtist = track.artist || '';
+            return trackArtist.toLowerCase() === artist.name.toLowerCase();
+         });
+      } catch (error) {
+         console.error('Error getting tracks by artist ID:', error);
+         return [];
+      }
+   },
 };
