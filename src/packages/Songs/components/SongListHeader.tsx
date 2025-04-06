@@ -1,16 +1,16 @@
-import { ShufflePlay, Text } from '@/components/atoms';
+import { SeeAll, Text } from '@/components/atoms';
 import { View } from 'react-native';
 
 interface SongListHeaderProps {
    renderHeader?: () => React.ReactNode;
-   onShufflePlay?: () => void;
-   songsAvailable?: boolean;
+   onToggleExpand?: () => void;
+   expanded?: boolean;
 }
 
 export const SongListHeader = ({
    renderHeader,
-   onShufflePlay,
-   songsAvailable = false,
+   expanded = false,
+   onToggleExpand,
 }: SongListHeaderProps) => {
    return (
       <View style={{ paddingHorizontal: 10 }}>
@@ -24,7 +24,7 @@ export const SongListHeader = ({
             }}
          >
             <Text variant="heading">Song List</Text>
-            <ShufflePlay onPress={onShufflePlay} disabled={!songsAvailable} />
+            <SeeAll onPress={onToggleExpand} expanded={expanded} />
          </View>
       </View>
    );
