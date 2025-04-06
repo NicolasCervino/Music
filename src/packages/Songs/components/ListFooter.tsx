@@ -24,19 +24,5 @@ export const ListFooter = memo(({ isLoadingMore, hasMore, songsLength }: ListFoo
          </View>
       );
    }
-   if (!hasMore && songsLength > 0) {
-      return (
-         <View
-            style={{
-               padding: 16,
-               alignItems: 'center',
-               flexDirection: 'row',
-               justifyContent: 'center',
-            }}
-         >
-            <Text>No more songs</Text>
-         </View>
-      );
-   }
    return null;
 });

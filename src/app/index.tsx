@@ -1,7 +1,7 @@
 import HeaderLogo from '@/components/atoms/Logo/HeaderLogo';
 import { TabBar } from '@/components/layout';
 import { TabContent } from '@/components/layout/TabBar/TabContent';
-import { ExpandablePlayerBarView, useInitializePlayer, usePlayer } from '@/features/player';
+import { useInitializePlayer, usePlayer } from '@/features/player';
 import { useTheme } from '@/theme';
 import { useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MainTabs() {
    const [activeTab, setActiveTab] = useState('home');
-   const { isPlayerReady, isExpanded, artworkColor, isVisible } = usePlayer();
+   const { isPlayerReady, isExpanded, artworkColor } = usePlayer();
    const initializePlayer = useInitializePlayer();
    const { theme } = useTheme();
    const navigation = useNavigation();
@@ -46,7 +46,6 @@ export default function MainTabs() {
          <HeaderLogo />
          <TabBar activeTab={activeTab} onTabPress={setActiveTab} />
          <TabContent activeTab={activeTab} />
-         {isVisible && <ExpandablePlayerBarView />}
       </SafeAreaView>
    );
 }

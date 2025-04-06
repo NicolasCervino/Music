@@ -2,59 +2,42 @@ import { Text } from '@/components/atoms';
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
-import { FlashList } from '@shopify/flash-list';
-import { useCallback, useMemo } from 'react';
+import { CollapsibleList } from '@/src/components/widgets';
 import { View } from 'react-native';
-import { ListFooter } from './components/ListFooter';
 import { SongListSkeleton } from './components/skeleton/SongListSkeleton';
-import { SongListHeader } from './components/SongListHeader';
 import { TrackBanner } from './components/TrackBanner';
-import { useSongList } from './hooks/useSongList';
-import { utils } from './utils';
+import { SongListHookResult } from './hooks/useSongList';
 
 const ITEM_HEIGHT = 76;
 
+export interface SongListProps extends SongListHookResult {
+   renderHeader?: () => React.ReactNode;
+   initialVisibleCount?: number;
+}
+
 export function SongList({
-   listHeaderComponent,
-}: {
-   listHeaderComponent?: React.ComponentType<any>;
-}) {
-   const {
-      songs,
-      activeTrackId,
-      currentTrack,
-      isLoading,
-      isError,
-      isFetchingNextPage,
-      hasNextPage,
-      handlePlayTrack,
-      handleEndReached,
-   } = useSongList();
+   title = '',
+   songs,
+   activeTrackId,
+   isPlayerVisible,
+   isLoading,
+   isError,
+   pagination,
+   onPlayTrack,
+   renderHeader,
+   initialVisibleCount = 5,
+}: SongListProps & { title?: string }) {
+   const listPadding = isPlayerVisible ? PLAYER_BAR_HEIGHT : 0;
 
-   const isVisible = !!currentTrack;
-   const listPadding = isVisible ? PLAYER_BAR_HEIGHT + 16 : 0;
-
-   const containerStyle = useMemo(() => ({ flex: 1, paddingBottom: listPadding }), [listPadding]);
-
-   const ListHeader = useMemo(
-      () => <SongListHeader ListHeaderComponent={listHeaderComponent} />,
-      [listHeaderComponent]
+   const renderSongItem = ({ item: track }: { item: Track }) => (
+      <TrackBanner
+         track={track}
+         isActive={track.id === activeTrackId}
+         onPress={() => onPlayTrack(track)}
+      />
    );
 
-   const keyExtractor = useCallback((item: Track) => {
-      return `track-${utils.hashString(item.id)}-${item.title}`;
-   }, []);
-
-   const renderItem = useCallback(
-      ({ item: track }: { item: Track }) => {
-         const isActive = track.id === activeTrackId;
-
-         return (
-            <TrackBanner track={track} isActive={isActive} onPress={() => handlePlayTrack(track)} />
-         );
-      },
-      [activeTrackId, handlePlayTrack]
-   );
+   const keyExtractor = (item: Track) => `track-${item.id}-${item.title}`;
 
    if (isError) {
       return (
@@ -72,33 +55,20 @@ export function SongList({
    }
 
    return (
-      <View style={containerStyle}>
-         <ErrorBoundary isLoading={isLoading} fallback={<SongListSkeleton count={8} />}>
-            <FlashList
-               estimatedItemSize={ITEM_HEIGHT}
-               ListHeaderComponent={ListHeader}
-               ListHeaderComponentStyle={{ paddingHorizontal: 10 }}
-               data={songs}
-               renderItem={renderItem}
-               onEndReached={handleEndReached}
-               onEndReachedThreshold={0.5}
-               extraData={activeTrackId}
-               ListFooterComponent={
-                  <ListFooter
-                     isLoadingMore={isFetchingNextPage}
-                     hasMore={!!hasNextPage}
-                     songsLength={songs.length}
-                  />
-               }
-               showsVerticalScrollIndicator={false}
-               contentContainerStyle={{ paddingHorizontal: 10 }}
-               drawDistance={ITEM_HEIGHT * 10}
-               maintainVisibleContentPosition={{
-                  minIndexForVisible: 0,
-               }}
-               keyExtractor={keyExtractor}
-            />
-         </ErrorBoundary>
-      </View>
+      <ErrorBoundary isLoading={isLoading} fallback={<SongListSkeleton count={8} />}>
+         <CollapsibleList
+            title={title}
+            data={songs}
+            renderItem={renderSongItem}
+            keyExtractor={keyExtractor}
+            renderHeader={renderHeader}
+            initialVisibleCount={initialVisibleCount}
+            estimatedItemSize={ITEM_HEIGHT}
+            bottomPadding={listPadding}
+            isLoading={isLoading}
+            fallback={<SongListSkeleton count={8} />}
+            onLoadMore={pagination.onLoadMore}
+         />
+      </ErrorBoundary>
    );
 }

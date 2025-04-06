@@ -1,3 +1,4 @@
+import { ExpandablePlayerBarView, usePlayer } from '@/features/player';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/theme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { queryClient } from '../clients/queryClient';
-import { MusicService } from '../services/MusicMetadataService';
+import { MusicService } from '../services/music-metadata/MusicMetadataService';
 import { PlayerService } from '../services/TrackPlayerService';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -61,13 +62,16 @@ export default function RootLayout() {
 
 function NavigationWrapper() {
    const { theme } = useTheme();
+   const { isVisible } = usePlayer();
 
    return (
       <ThemeProvider value={theme.dark ? DarkTheme : DefaultTheme}>
          <GestureHandlerRootView style={{ flex: 1 }}>
             <Stack screenOptions={{ headerShown: false }}>
                <Stack.Screen name="index" />
+               <Stack.Screen name="artist/[id]" options={{ headerShown: false }} />
             </Stack>
+            {isVisible && <ExpandablePlayerBarView />}
          </GestureHandlerRootView>
       </ThemeProvider>
    );
