@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
    artistListItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
       paddingVertical: 8,
       gap: 12,
    },
@@ -23,10 +23,6 @@ const styles = StyleSheet.create({
    },
    artistName: {
       marginBottom: 4,
-   },
-   followers: {
-      opacity: 0.7,
-      marginBottom: 8,
    },
    genreContainer: {
       flexDirection: 'row',
@@ -51,9 +47,6 @@ export function ArtistCard({ artist }: { artist: Artist }) {
          <View style={styles.artistInfo}>
             <Text variant="subtitle" style={styles.artistName}>
                {artist.name}
-            </Text>
-            <Text variant="caption" style={styles.followers}>
-               {artist.followers} followers
             </Text>
             <View style={styles.genreContainer}>
                {artist.genres.map((genre, index) => (

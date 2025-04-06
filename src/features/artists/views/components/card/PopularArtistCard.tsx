@@ -7,22 +7,19 @@ const styles = StyleSheet.create({
    popularArtistCard: {
       width: 150,
       alignItems: 'center',
+      marginRight: 16,
    },
    popularArtistImage: {
       width: 150,
       height: 150,
       borderRadius: 75,
-      marginBottom: 12,
+      marginBottom: 8,
    },
    artistInfo: {
       flex: 1,
    },
    artistName: {
       marginBottom: 4,
-   },
-   followers: {
-      opacity: 0.7,
-      marginBottom: 8,
    },
 });
 
@@ -36,9 +33,6 @@ export function PopularArtistCard({ artist }: { artist: Artist }) {
          />
          <Text variant="subtitle" style={styles.artistName}>
             {artist.name}
-         </Text>
-         <Text variant="caption" style={styles.followers}>
-            {artist.followers} followers
          </Text>
       </Pressable>
    );

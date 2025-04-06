@@ -204,7 +204,6 @@ export const MusicService = {
                   id: artistId,
                   name: artistName,
                   image: track.artwork || '', // Use first track's artwork
-                  followers: '', // We don't have this data
                   genres: [], // Initialize empty genres array
                });
             }
@@ -248,7 +247,6 @@ export const MusicService = {
                   id: artistId,
                   name: artistName,
                   image: track.artwork || '',
-                  followers: '',
                   genres: track.genre ? [track.genre] : [],
                });
             }
