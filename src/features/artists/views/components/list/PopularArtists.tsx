@@ -1,8 +1,8 @@
 import { Text } from '@/components/atoms';
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
+import { Artist } from '@/src/entities';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 import { usePopularArtists } from '../../../hooks';
-import { Artist } from '../../../types';
 import { PopularArtistCard } from '../card/PopularArtistCard';
 
 export function PopularArtists() {

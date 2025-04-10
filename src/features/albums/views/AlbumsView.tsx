@@ -1,11 +1,10 @@
 import { useTheme } from '@/theme';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
-import { usePlayer } from '../../player/hooks/usePlayer';
-import { ArtistList } from './components/list/ArtistList';
-import { PopularArtists } from './components/list/PopularArtists';
+import { usePlayer } from '../../player';
+import { AlbumList, PopularAlbums } from './components';
 
-export function ArtistsView() {
+export function AlbumsView() {
    const { theme } = useTheme();
    const [expanded, setExpanded] = useState(false);
    const { isVisible } = usePlayer();
@@ -16,11 +15,12 @@ export function ArtistsView() {
 
    return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-         <ArtistList
+         <AlbumList
             expanded={expanded}
             onExpandToggle={toggleExpand}
-            renderHeader={() => <PopularArtists />}
+            renderHeader={() => <PopularAlbums />}
             headerStyle={{ paddingLeft: 20 }}
+            listStyle={{ paddingHorizontal: 20 }}
             isPlayerVisible={isVisible}
          />
       </View>

@@ -1,8 +1,8 @@
 import { Text } from '@/components/atoms';
+import { Artist } from '@/src/entities';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
-import { Artist } from '../../../types';
 
 const styles = StyleSheet.create({
    popularArtistCard: {
