@@ -2,7 +2,7 @@ import { SeeAll, Text } from '@/components/atoms';
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { StyleProp, View, ViewStyle } from 'react-native';
 
 interface CollapsibleListProps<T> {
    title: string;
@@ -16,6 +16,7 @@ interface CollapsibleListProps<T> {
    fallback?: React.ReactNode;
    onLoadMore?: () => void;
    bottomPadding?: number;
+   headerStyle?: StyleProp<ViewStyle>;
    expanded?: boolean;
    onExpandToggle?: () => void;
    numColumns?: number;
@@ -36,6 +37,7 @@ export function CollapsibleList<T>({
    expanded: externalExpanded,
    onExpandToggle: externalToggle,
    numColumns = 1,
+   headerStyle,
 }: CollapsibleListProps<T>) {
    const [internalExpanded, setInternalExpanded] = useState(false);
    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
@@ -69,9 +71,7 @@ export function CollapsibleList<T>({
    return (
       <View style={{ flex: 1, paddingBottom: bottomPadding }}>
          <ErrorBoundary isLoading={isLoading} fallback={fallback}>
-            {renderHeader && !expanded && (
-               <View style={{ paddingHorizontal: 20 }}>{renderHeader()}</View>
-            )}
+            {renderHeader && !expanded && <View style={headerStyle}>{renderHeader()}</View>}
             <View
                style={{
                   paddingHorizontal: 20,

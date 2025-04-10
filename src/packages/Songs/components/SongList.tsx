@@ -3,7 +3,7 @@ import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary'
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
 import { CollapsibleList } from '@/src/components/widgets';
-import { View } from 'react-native';
+import { StyleProp, View, ViewStyle } from 'react-native';
 import { SongListHookResult } from '../hooks/useSongList';
 import { SongListSkeleton } from './skeleton/SongListSkeleton';
 import { TrackBanner } from './TrackBanner';
@@ -13,6 +13,7 @@ const ITEM_HEIGHT = 76;
 export interface SongListProps extends SongListHookResult {
    renderHeader?: () => React.ReactNode;
    initialVisibleCount?: number;
+   headerStyle?: StyleProp<ViewStyle>;
 }
 
 export function SongList({
@@ -25,6 +26,7 @@ export function SongList({
    pagination,
    onPlayTrack,
    renderHeader,
+   headerStyle,
    initialVisibleCount = 5,
 }: SongListProps & { title?: string }) {
    const listPadding = isPlayerVisible ? PLAYER_BAR_HEIGHT : 0;
@@ -62,6 +64,7 @@ export function SongList({
             renderItem={renderSongItem}
             keyExtractor={keyExtractor}
             renderHeader={renderHeader}
+            headerStyle={headerStyle}
             initialVisibleCount={initialVisibleCount}
             estimatedItemSize={ITEM_HEIGHT}
             bottomPadding={listPadding}

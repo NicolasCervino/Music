@@ -10,7 +10,12 @@ export function HomeView() {
 
    return (
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-         <SongList title="Song List" {...methods} renderHeader={() => <PopularAlbums />} />
+         <SongList
+            title="Song List"
+            {...methods}
+            renderHeader={() => <PopularAlbums />}
+            headerStyle={{ paddingLeft: 20 }}
+         />
       </View>
    );
 }
