@@ -1,23 +1,28 @@
 import { Text } from '@/components/atoms';
-import { Track } from '@/src/entities';
+import { Artist, Track } from '@/src/entities';
 import { usePlayer } from '@/src/features/player';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { Artist } from '../../types';
 
 interface ArtistHeaderProps {
    artist: Artist | null;
    onPlayAll?: (songs: Track[]) => void;
+   onShufflePlay?: () => void;
    songCount: number;
    songs: Track[];
 }
 
-export function ArtistHeader({ artist, onPlayAll, songCount, songs }: ArtistHeaderProps) {
+export function ArtistHeader({
+   artist,
+   onPlayAll,
+   onShufflePlay,
+   songCount,
+   songs,
+}: ArtistHeaderProps) {
    const { theme } = useTheme();
    const { artworkColor } = usePlayer();
 
-   // Usar la misma lógica que en PlayerTransition para determinar el color
    const buttonColor = artworkColor === '' ? theme.colors.primary : artworkColor;
 
    if (!artist) return null;
@@ -70,8 +75,11 @@ export function ArtistHeader({ artist, onPlayAll, songCount, songs }: ArtistHead
                   <Ionicons name="play" size={20} color="white" />
                   <Text style={{ color: 'white', marginLeft: 8 }}>Play All</Text>
                </Pressable>
-
-               <Pressable style={styles.iconButton}>
+               <Pressable
+                  style={styles.iconButton}
+                  onPress={onShufflePlay}
+                  disabled={songs.length === 0}
+               >
                   <Ionicons
                      name="shuffle"
                      size={24}

@@ -1,9 +1,9 @@
 import { Text } from '@/components/atoms';
+import { Artist } from '@/src/entities';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Artist } from '../../../types';
 
 const styles = StyleSheet.create({
    artistListItem: {

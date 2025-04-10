@@ -1,10 +1,15 @@
-import { Track } from '@/entities';
-import { Artist } from '@/features/artists';
+import { Album, Artist, Track } from '@/entities';
 import * as MediaLibrary from 'expo-media-library';
-import { getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
+import { getAlbums, getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
 import { ColorService } from '../CacheColorService';
 import { DatabaseService } from '../DatabaseService';
-import { BATCH_SIZE, MAX_PAGES, MUSIC_DIRECTORIES, PAGE_SIZE } from './constants';
+import {
+   BATCH_SIZE,
+   EXCLUDED_PATTERNS,
+   MAX_PAGES,
+   MUSIC_DIRECTORIES,
+   PAGE_SIZE,
+} from './constants';
 import { musicMetadataUtils } from './utils';
 
 export const MusicService = {
@@ -290,6 +295,208 @@ export const MusicService = {
          });
       } catch (error) {
          console.error('Error getting tracks by artist ID:', error);
+         return [];
+      }
+   },
+
+   getAlbums: async (): Promise<Album[]> => {
+      try {
+         // Primera estrategia: usar la base de datos de pistas para construir álbumes únicos
+         // Esto garantiza que solo se incluyan álbumes de pistas que ya pasaron el filtrado
+         const tracks = await DatabaseService.getAllTracks();
+
+         if (tracks.length > 0) {
+            const albumsMap = new Map<string, Album>();
+
+            tracks.forEach(track => {
+               // Aplicar el mismo filtro de exclusión que usamos para pistas individuales
+               if (musicMetadataUtils.shouldExcludeTrack(track.url || '')) {
+                  return;
+               }
+
+               const albumTitle = track.album || 'Unknown Album';
+               const albumArtist = track.artist || 'Unknown Artist';
+
+               // Ignorar álbumes con títulos genéricos de WhatsApp o cualquier patrón excluido
+               if (
+                  EXCLUDED_PATTERNS.some(
+                     pattern =>
+                        albumTitle.toLowerCase().includes(pattern) ||
+                        albumArtist.toLowerCase().includes(pattern)
+                  )
+               ) {
+                  return;
+               }
+
+               const albumId = `album-${musicMetadataUtils.stableHash(
+                  albumTitle + '-' + albumArtist
+               )}`;
+
+               if (!albumsMap.has(albumId)) {
+                  albumsMap.set(albumId, {
+                     id: albumId,
+                     title: albumTitle,
+                     artist: albumArtist,
+                     artwork: track.artwork || '',
+                  });
+               } else if (!albumsMap.get(albumId)?.artwork && track.artwork) {
+                  const existingAlbum = albumsMap.get(albumId)!;
+                  albumsMap.set(albumId, {
+                     ...existingAlbum,
+                     artwork: track.artwork,
+                  });
+               }
+            });
+
+            return Array.from(albumsMap.values());
+         }
+
+         // Estrategia alternativa (fallback): usar la API nativa
+         // Solo si no tenemos pistas en la base de datos
+         const albumsResult = await getAlbums({
+            coverQuality: 50,
+            artist: '',
+         });
+
+         if (typeof albumsResult === 'string' || albumsResult.length === 0) {
+            return [];
+         }
+
+         const uniqueAlbums = new Map<string, Album>();
+
+         albumsResult.forEach(libraryAlbum => {
+            const albumName = libraryAlbum.album || 'Unknown Album';
+            const artistName = libraryAlbum.artist || 'Unknown Artist';
+
+            // Aplicar las mismas exclusiones que usamos para pistas
+            if (
+               EXCLUDED_PATTERNS.some(
+                  pattern =>
+                     albumName.toLowerCase().includes(pattern) ||
+                     artistName.toLowerCase().includes(pattern) ||
+                     (libraryAlbum.url && musicMetadataUtils.shouldExcludeTrack(libraryAlbum.url))
+               )
+            ) {
+               return;
+            }
+
+            const id = `album-${musicMetadataUtils.stableHash(albumName + '-' + artistName)}`;
+
+            const album = {
+               id,
+               title: albumName,
+               artist: artistName,
+               artwork: libraryAlbum.cover || '',
+            };
+
+            if (!uniqueAlbums.has(id) || (!uniqueAlbums.get(id)?.artwork && album.artwork)) {
+               uniqueAlbums.set(id, album);
+            }
+         });
+
+         return Array.from(uniqueAlbums.values());
+      } catch (error) {
+         console.error('Error getting albums:', error);
+         return [];
+      }
+   },
+
+   getAlbumById: async (albumId: string) => {
+      try {
+         const albums = await MusicService.getAlbums();
+         return albums.find(album => album.id === albumId) || null;
+      } catch (error) {
+         console.error('Error getting album by ID:', error);
+         return null;
+      }
+   },
+
+   getTracksByAlbumId: async (albumId: string) => {
+      try {
+         const allTracks = await DatabaseService.getAllTracks();
+         const album = await MusicService.getAlbumById(albumId);
+
+         if (!album) return [];
+
+         // Filtrar canciones por título del álbum y artista
+         return allTracks.filter(track => {
+            const trackAlbum = track.album || '';
+            const trackArtist = track.artist || '';
+            return (
+               trackAlbum.toLowerCase() === album.title.toLowerCase() &&
+               trackArtist.toLowerCase() === album.artist.toLowerCase()
+            );
+         });
+      } catch (error) {
+         console.error('Error getting tracks by album ID:', error);
+         return [];
+      }
+   },
+
+   getPopularAlbums: async (limit: number = 3): Promise<Album[]> => {
+      try {
+         // Obtener todas las pistas
+         const tracks = await DatabaseService.getAllTracks();
+
+         // Contar pistas por álbum
+         const albumTrackCounts = new Map<string, number>();
+         const albumData = new Map<string, Album>();
+
+         tracks.forEach(track => {
+            // Ignorar pistas excluidas
+            if (musicMetadataUtils.shouldExcludeTrack(track.url || '')) {
+               return;
+            }
+
+            const albumTitle = track.album || 'Unknown Album';
+            const albumArtist = track.artist || 'Unknown Artist';
+
+            // Ignorar álbumes con títulos genéricos o patrones excluidos
+            if (
+               EXCLUDED_PATTERNS.some(
+                  pattern =>
+                     albumTitle.toLowerCase().includes(pattern) ||
+                     albumArtist.toLowerCase().includes(pattern)
+               )
+            ) {
+               return;
+            }
+
+            const albumId = `album-${musicMetadataUtils.stableHash(
+               albumTitle + '-' + albumArtist
+            )}`;
+
+            // Contar pistas
+            albumTrackCounts.set(albumId, (albumTrackCounts.get(albumId) || 0) + 1);
+
+            // Almacenar datos del álbum
+            if (!albumData.has(albumId)) {
+               albumData.set(albumId, {
+                  id: albumId,
+                  title: albumTitle,
+                  artist: albumArtist,
+                  artwork: track.artwork || '',
+               });
+            } else if (!albumData.get(albumId)?.artwork && track.artwork) {
+               // Si ya existe el álbum pero no tiene artwork, actualizarlo
+               const existingAlbum = albumData.get(albumId)!;
+               albumData.set(albumId, {
+                  ...existingAlbum,
+                  artwork: track.artwork,
+               });
+            }
+         });
+
+         // Ordenar álbumes por cantidad de pistas y obtener los principales
+         const topAlbumIds = [...albumTrackCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, limit)
+            .map(entry => entry[0]);
+
+         // Obtener datos de álbumes para los principales
+         return topAlbumIds.map(id => albumData.get(id)!);
+      } catch (error) {
+         console.error('Error getting popular albums:', error);
          return [];
       }
    },

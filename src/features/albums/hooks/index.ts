@@ -1,42 +1,42 @@
 import { Track } from '@/src/entities';
 import { useCurrentTrack, usePlayerControls } from '@/src/features/player';
 import { useQuery } from '@tanstack/react-query';
-import { fetchArtists } from '../fetch';
+import { fetchAlbums } from '../fetch';
 
 export const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 
-export function useArtists() {
+export function useAlbums() {
    return useQuery({
-      queryKey: ['artists'],
-      queryFn: () => fetchArtists.get(),
+      queryKey: ['albums'],
+      queryFn: () => fetchAlbums.get(),
       staleTime: STALE_TIME,
    });
 }
 
-export function usePopularArtists(limit: number = 3) {
+export function usePopularAlbums(limit: number = 3) {
    return useQuery({
-      queryKey: ['popularArtists', limit],
-      queryFn: () => fetchArtists.getPopular(limit),
+      queryKey: ['popularAlbums', limit],
+      queryFn: () => fetchAlbums.getPopular(limit),
       staleTime: STALE_TIME,
    });
 }
 
-export function useArtistSongs(artistId: string) {
-   const { data: artist, isLoading: isArtistLoading } = useQuery({
-      queryKey: ['artist', artistId],
-      queryFn: () => fetchArtists.getById(artistId),
-      enabled: !!artistId,
+export function useAlbumTracks(albumId: string) {
+   const { data: album, isLoading: isAlbumLoading } = useQuery({
+      queryKey: ['album', albumId],
+      queryFn: () => fetchAlbums.getById(albumId),
+      enabled: !!albumId,
       staleTime: STALE_TIME,
    });
 
    const {
-      data: songs,
-      isLoading: isSongsLoading,
+      data: tracks,
+      isLoading: isTracksLoading,
       isError,
    } = useQuery({
-      queryKey: ['artist-songs', artistId],
-      queryFn: () => fetchArtists.getSongs(artistId),
-      enabled: !!artistId,
+      queryKey: ['album-tracks', albumId],
+      queryFn: () => fetchAlbums.getTracks(albumId),
+      enabled: !!albumId,
       staleTime: STALE_TIME,
    });
 
@@ -48,24 +48,26 @@ export function useArtistSongs(artistId: string) {
    const activeTrackId = currentTrack?.id;
 
    const onPlayTrack = (track: Track) => {
-      controls.playTrack({
-         track,
-         allTracks: songs || [],
-      });
+      if (tracks && tracks.length > 0) {
+         controls.playTrack({
+            track,
+            allTracks: tracks,
+         });
+      }
    };
 
    const onShufflePlay = () => {
-      if (songs && songs.length > 0) {
+      if (tracks && tracks.length > 0) {
          controls.shufflePlay({
-            tracks: songs,
+            tracks: tracks,
          });
       }
    };
 
    return {
-      artist,
-      data: { songs: songs || [] },
-      isLoading: isArtistLoading || isSongsLoading,
+      album,
+      data: { tracks: tracks || [] },
+      isLoading: isAlbumLoading || isTracksLoading,
       isError,
       // Player controls
       activeTrackId,

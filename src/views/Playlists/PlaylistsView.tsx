@@ -1,9 +1,9 @@
-import { View, Text } from "react-native";
+import { Text, View } from 'react-native';
 
 export default function PlaylistsView() {
-  return (
-    <View style={{ flex: 1 }}>
-      <Text style={{ color: 'white' }}>Playlists Content</Text>
-    </View>
-  );
+   return (
+      <View style={{ flex: 1 }}>
+         <Text style={{ color: 'white' }}>Playlists Content</Text>
+      </View>
+   );
 }
