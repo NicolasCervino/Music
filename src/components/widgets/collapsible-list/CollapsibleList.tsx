@@ -20,6 +20,7 @@ interface CollapsibleListProps<T> {
    expanded?: boolean;
    onExpandToggle?: () => void;
    numColumns?: number;
+   extraData?: any;
 }
 
 export function CollapsibleList<T>({
@@ -38,6 +39,7 @@ export function CollapsibleList<T>({
    onExpandToggle: externalToggle,
    numColumns = 1,
    headerStyle,
+   extraData,
 }: CollapsibleListProps<T>) {
    const [internalExpanded, setInternalExpanded] = useState(false);
    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
@@ -91,6 +93,7 @@ export function CollapsibleList<T>({
                data={displayedItems}
                renderItem={renderItem}
                keyExtractor={keyExtractor}
+               extraData={extraData}
                onEndReached={expanded ? onLoadMore : undefined}
                onEndReachedThreshold={0.5}
                showsVerticalScrollIndicator={false}

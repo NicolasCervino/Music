@@ -36,13 +36,13 @@ export function useCurrentTrack() {
       queryKey: ['currentTrack'],
       queryFn: async () => {
          await PlayerService.setupPlayer();
-         return PlayerService.getCurrentTrack();
+         return await PlayerService.getCurrentTrack();
       },
-      staleTime: Infinity, // Never consider stale by time passing
-      gcTime: Infinity, // Never remove from cache
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
+      staleTime: 0,
+      gcTime: Infinity,
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
    });
 }
 

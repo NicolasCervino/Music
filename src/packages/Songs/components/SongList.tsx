@@ -3,6 +3,7 @@ import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary'
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
 import { CollapsibleList } from '@/src/components/widgets';
+import { useCallback } from 'react';
 import { StyleProp, View, ViewStyle } from 'react-native';
 import { SongListHookResult } from '../hooks/useSongList';
 import { SongListSkeleton } from './skeleton/SongListSkeleton';
@@ -31,12 +32,14 @@ export function SongList({
 }: SongListProps & { title?: string }) {
    const listPadding = isPlayerVisible ? PLAYER_BAR_HEIGHT : 0;
 
-   const renderSongItem = ({ item: track }: { item: Track }) => (
-      <TrackBanner
-         track={track}
-         isActive={track.id === activeTrackId}
-         onPress={() => onPlayTrack(track)}
-      />
+   const renderSongItem = useCallback(
+      ({ item: track }: { item: Track }) => {
+         const isActive = track.id === activeTrackId;
+         return (
+            <TrackBanner track={track} isActive={isActive} onPress={() => onPlayTrack(track)} />
+         );
+      },
+      [activeTrackId, onPlayTrack]
    );
 
    const keyExtractor = (item: Track) => `track-${item.id}-${item.title}`;
@@ -71,6 +74,7 @@ export function SongList({
             isLoading={isLoading}
             fallback={<SongListSkeleton count={8} />}
             onLoadMore={pagination.onLoadMore}
+            extraData={activeTrackId}
          />
       </ErrorBoundary>
    );

@@ -12,86 +12,81 @@ type TrackBannerProps = {
    onPress: () => void;
 };
 
-export const TrackBanner = memo(
-   function TrackBanner({ track, isActive, onPress }: TrackBannerProps) {
-      const { theme } = useTheme();
+export const TrackBanner = memo(function TrackBanner({
+   track,
+   isActive,
+   onPress,
+}: TrackBannerProps) {
+   const { theme } = useTheme();
 
-      return (
-         <TouchableOpacity
-            activeOpacity={0.5}
-            style={[
-               {
-                  flexDirection: 'row',
+   return (
+      <TouchableOpacity
+         activeOpacity={0.5}
+         style={[
+            {
+               flexDirection: 'row',
+               alignItems: 'center',
+               paddingVertical: 8,
+               paddingHorizontal: 16,
+               gap: 12,
+            },
+            isActive
+               ? {
+                    backgroundColor: 'rgba(0, 0, 255, 0.15)',
+                    borderLeftWidth: 3,
+                    borderLeftColor: theme.colors.primary,
+                 }
+               : null,
+         ]}
+         onPress={onPress}
+      >
+         {track.artwork ? (
+            <Image
+               source={{ uri: track.artwork }}
+               style={{ width: 56, height: 56, borderRadius: 4 }}
+               contentFit="cover"
+            />
+         ) : (
+            <View
+               style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  justifyContent: 'center',
                   alignItems: 'center',
-                  paddingVertical: 8,
-                  paddingHorizontal: 16,
-                  gap: 12,
-               },
-               isActive
-                  ? {
-                       backgroundColor: 'rgba(0, 0, 255, 0.15)',
-                       borderLeftWidth: 3,
-                       borderLeftColor: theme.colors.primary,
-                    }
-                  : null,
-            ]}
-            onPress={onPress}
-         >
-            {track.artwork ? (
-               <Image
-                  source={{ uri: track.artwork }}
-                  style={{ width: 56, height: 56, borderRadius: 4 }}
-                  contentFit="cover"
+                  width: 56,
+                  height: 56,
+                  borderRadius: 4,
+               }}
+            >
+               <Ionicons
+                  name="musical-note"
+                  size={24}
+                  color={isActive ? theme.colors.primary : theme.colors.text}
                />
-            ) : (
-               <View
-                  style={{
-                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                     justifyContent: 'center',
-                     alignItems: 'center',
-                     width: 56,
-                     height: 56,
-                     borderRadius: 4,
-                  }}
-               >
-                  <Ionicons
-                     name="musical-note"
-                     size={24}
-                     color={isActive ? theme.colors.primary : theme.colors.text}
-                  />
-               </View>
-            )}
-            <View style={{ flex: 1 }}>
-               <Text
-                  variant="subtitle"
-                  style={[{ marginBottom: 4 }, isActive && { color: theme.colors.primary }]}
-                  numberOfLines={1}
-               >
-                  {track.title}
-               </Text>
-               <Text
-                  variant="caption"
-                  style={[{ opacity: 0.7 }, isActive && { color: theme.colors.primary }]}
-                  numberOfLines={1}
-               >
-                  {track.artist}
-               </Text>
             </View>
+         )}
+         <View style={{ flex: 1 }}>
             <Text
-               variant="caption"
-               style={[
-                  { opacity: 0.7, marginRight: 8 },
-                  isActive && { color: theme.colors.primary },
-               ]}
+               variant="subtitle"
+               style={[{ marginBottom: 4 }, isActive && { color: theme.colors.primary }]}
                numberOfLines={1}
             >
-               {track.duration}
+               {track.title}
             </Text>
-         </TouchableOpacity>
-      );
-   },
-   (prevProps, nextProps) => {
-      // Simplify: only re-render if active state or track ID changes
-      return prevProps.isActive === nextProps.isActive && prevProps.track.id === nextProps.track.id;
-   }
-);
+            <Text
+               variant="caption"
+               style={[{ opacity: 0.7 }, isActive && { color: theme.colors.primary }]}
+               numberOfLines={1}
+            >
+               {track.artist}
+            </Text>
+         </View>
+         <Text
+            variant="caption"
+            style={[{ opacity: 0.7, marginRight: 8 }, isActive && { color: theme.colors.primary }]}
+            numberOfLines={1}
+         >
+            {track.duration}
+         </Text>
+      </TouchableOpacity>
+   );
+});
