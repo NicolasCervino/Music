@@ -2,7 +2,7 @@ import { Album, Artist, Track } from '@/entities';
 import * as MediaLibrary from 'expo-media-library';
 import { getAlbums, getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
 import { ColorService } from '../CacheColorService';
-import { DatabaseService } from '../DatabaseService';
+import { DatabaseService } from '../database';
 import {
    BATCH_SIZE,
    EXCLUDED_PATTERNS,

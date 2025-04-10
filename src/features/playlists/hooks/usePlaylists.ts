@@ -1,5 +1,5 @@
 import { Playlist } from '@/entities';
-import { DatabaseService } from '@/services/DatabaseService';
+import { DatabaseService } from '@/services/database';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const PLAYLIST_QUERY_KEY = 'playlists';
