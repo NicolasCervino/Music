@@ -19,7 +19,7 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(undefine
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
    const colorScheme = useColorScheme();
-   const [currentVariant, setCurrentVariant] = useState<ThemeVariant>('sunsetVibes');
+   const [currentVariant, setCurrentVariant] = useState<ThemeVariant>('darkRed');
 
    const getTheme = (scheme: ColorScheme, variant: ThemeVariant): Theme => ({
       dark: scheme === 'dark',

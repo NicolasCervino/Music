@@ -1,7 +1,7 @@
 import { AlbumsView } from '@/features/albums';
 import { ArtistsView } from '@/features/artists';
+import { PlaylistsView } from '@/features/playlists';
 import { HomeView } from '@/views/Home/HomeView';
-import PlaylistsView from '@/views/Playlists/PlaylistsView';
 import { View } from 'react-native';
 
 type TabContentProps = {

@@ -1,6 +1,8 @@
 import { Text } from '@/components/atoms';
 import { Track } from '@/entities';
+import { usePlayer } from '@/src/features/player';
 import { useTheme } from '@/theme';
+import { ensureColorContrast } from '@/utils/image';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React, { memo } from 'react';
@@ -18,6 +20,10 @@ export const TrackBanner = memo(function TrackBanner({
    onPress,
 }: TrackBannerProps) {
    const { theme } = useTheme();
+   const { artworkColor } = usePlayer();
+
+   const backgroundColor = artworkColor === '' ? theme.colors.primary : artworkColor;
+   const textColor = artworkColor === '' ? theme.colors.primary : ensureColorContrast(artworkColor);
 
    return (
       <TouchableOpacity
@@ -34,7 +40,7 @@ export const TrackBanner = memo(function TrackBanner({
                ? {
                     backgroundColor: 'rgba(0, 0, 255, 0.15)',
                     borderLeftWidth: 3,
-                    borderLeftColor: theme.colors.primary,
+                    borderLeftColor: backgroundColor,
                  }
                : null,
          ]}
@@ -60,21 +66,21 @@ export const TrackBanner = memo(function TrackBanner({
                <Ionicons
                   name="musical-note"
                   size={24}
-                  color={isActive ? theme.colors.primary : theme.colors.text}
+                  color={isActive ? textColor : theme.colors.text}
                />
             </View>
          )}
          <View style={{ flex: 1 }}>
             <Text
                variant="subtitle"
-               style={[{ marginBottom: 4 }, isActive && { color: theme.colors.primary }]}
+               style={[{ marginBottom: 4 }, isActive && { color: textColor }]}
                numberOfLines={1}
             >
                {track.title}
             </Text>
             <Text
                variant="caption"
-               style={[{ opacity: 0.7 }, isActive && { color: theme.colors.primary }]}
+               style={[{ opacity: 0.7 }, isActive && { color: textColor }]}
                numberOfLines={1}
             >
                {track.artist}
@@ -82,7 +88,7 @@ export const TrackBanner = memo(function TrackBanner({
          </View>
          <Text
             variant="caption"
-            style={[{ opacity: 0.7, marginRight: 8 }, isActive && { color: theme.colors.primary }]}
+            style={[{ opacity: 0.7, marginRight: 8 }, isActive && { color: textColor }]}
             numberOfLines={1}
          >
             {track.duration}

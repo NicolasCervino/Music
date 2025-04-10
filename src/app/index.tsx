@@ -1,6 +1,6 @@
 import HeaderLogo from '@/components/atoms/Logo/HeaderLogo';
 import { TabBar } from '@/components/layout';
-import { TabContent } from '@/components/layout/TabBar/TabContent';
+import { TabContent } from '@/components/layout/tabBar/TabContent';
 import { useInitializePlayer, usePlayer } from '@/features/player';
 import { useTheme } from '@/theme';
 import { useNavigation } from 'expo-router';
@@ -19,7 +19,8 @@ export default function MainTabs() {
       initializePlayer.mutate();
    }, []);
 
-   const statusBarStyle = isExpanded && isPlayerReady ? 'light' : theme.dark ? 'light' : 'dark';
+   const statusBarStyle =
+      isExpanded && isPlayerReady ? 'light' : !theme.dark ? 'dark-content' : 'light-content';
 
    const statusBarBackgroundColor =
       isExpanded && isPlayerReady ? artworkColor : theme.colors.background;
