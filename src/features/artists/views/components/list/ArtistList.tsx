@@ -3,7 +3,7 @@ import { CollapsibleList } from '@/src/components/widgets';
 import { PLAYER_BAR_HEIGHT } from '@/src/constants/dimensions';
 import { Artist } from '@/src/entities';
 import { Href, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { StyleProp, View, ViewStyle } from 'react-native';
 import { useArtists } from '../../../hooks';
 import { ArtistCard } from '../card/ArtistCard';
 
@@ -14,6 +14,7 @@ export interface ArtistListProps {
    expanded: boolean;
    onExpandToggle: () => void;
    renderHeader?: () => React.ReactNode;
+   headerStyle?: StyleProp<ViewStyle>;
    isPlayerVisible: boolean;
 }
 
@@ -22,6 +23,7 @@ export function ArtistList({
    expanded,
    onExpandToggle,
    renderHeader,
+   headerStyle,
    isPlayerVisible,
 }: ArtistListProps): React.ReactElement {
    const { data: artists = [], isLoading } = useArtists();
@@ -45,6 +47,7 @@ export function ArtistList({
             renderItem={renderArtistItem}
             keyExtractor={keyExtractor}
             renderHeader={renderHeader}
+            headerStyle={headerStyle}
             initialVisibleCount={initialVisibleCount}
             estimatedItemSize={ITEM_HEIGHT}
             bottomPadding={listPadding}

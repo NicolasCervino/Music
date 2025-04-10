@@ -52,6 +52,7 @@ export function AlbumDetailView({ methods }: AlbumDetailViewProps): React.ReactE
                activeTrackId={methods.activeTrackId}
                isPlayerVisible={methods.isPlayerVisible}
                renderHeader={renderAlbumHeader}
+               headerStyle={{ paddingHorizontal: 10 }}
                onShufflePlay={methods.onShufflePlay}
             />
          </ErrorBoundary>

@@ -19,6 +19,8 @@ export function AlbumsView() {
             expanded={expanded}
             onExpandToggle={toggleExpand}
             renderHeader={() => <PopularAlbums />}
+            headerStyle={{ paddingLeft: 20 }}
+            listStyle={{ paddingHorizontal: 20 }}
             isPlayerVisible={isVisible}
          />
       </View>

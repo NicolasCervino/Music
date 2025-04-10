@@ -20,6 +20,7 @@ export function ArtistsView() {
             expanded={expanded}
             onExpandToggle={toggleExpand}
             renderHeader={() => <PopularArtists />}
+            headerStyle={{ paddingLeft: 20 }}
             isPlayerVisible={isVisible}
          />
       </View>

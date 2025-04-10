@@ -1,6 +1,6 @@
 import { SeeAll, Text } from '@/components/atoms';
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
-import { FlashList, ListRenderItem } from '@shopify/flash-list';
+import { ContentStyle, FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleProp, View, ViewStyle } from 'react-native';
 
@@ -21,6 +21,7 @@ interface CollapsibleListProps<T> {
    onExpandToggle?: () => void;
    numColumns?: number;
    extraData?: any;
+   listStyle?: ContentStyle;
 }
 
 export function CollapsibleList<T>({
@@ -40,6 +41,7 @@ export function CollapsibleList<T>({
    numColumns = 1,
    headerStyle,
    extraData,
+   listStyle,
 }: CollapsibleListProps<T>) {
    const [internalExpanded, setInternalExpanded] = useState(false);
    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
@@ -97,7 +99,10 @@ export function CollapsibleList<T>({
                onEndReached={expanded ? onLoadMore : undefined}
                onEndReachedThreshold={0.5}
                showsVerticalScrollIndicator={false}
-               contentContainerStyle={{ paddingHorizontal: 10 }}
+               contentContainerStyle={{
+                  ...listStyle,
+                  paddingHorizontal: listStyle?.paddingHorizontal ?? 10,
+               }}
                drawDistance={estimatedItemSize * 10}
                maintainVisibleContentPosition={{
                   minIndexForVisible: 0,

@@ -14,7 +14,12 @@ export const AlbumItem = memo(({ album, onPress }: AlbumItemProps) => {
 
    return (
       <Pressable
-         style={[styles.container, { backgroundColor: theme.colors.card }]}
+         style={[
+            styles.container,
+            {
+               backgroundColor: theme.colors.card,
+            },
+         ]}
          onPress={onPress}
       >
          <Image

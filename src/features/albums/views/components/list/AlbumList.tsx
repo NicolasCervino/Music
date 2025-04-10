@@ -2,8 +2,9 @@ import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary'
 import { CollapsibleList } from '@/src/components/widgets';
 import { PLAYER_BAR_HEIGHT } from '@/src/constants/dimensions';
 import { Album } from '@/src/entities';
+import { ContentStyle } from '@shopify/flash-list';
 import { Href, useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { StyleProp, View, ViewStyle } from 'react-native';
 import { useAlbums } from '../../../hooks';
 import { AlbumItem } from '../item/AlbumItem';
 
@@ -14,6 +15,8 @@ export interface AlbumListProps {
    expanded: boolean;
    onExpandToggle: () => void;
    renderHeader?: () => React.ReactNode;
+   headerStyle?: StyleProp<ViewStyle>;
+   listStyle?: ContentStyle;
    isPlayerVisible: boolean;
 }
 
@@ -22,6 +25,8 @@ export function AlbumList({
    expanded,
    onExpandToggle,
    renderHeader,
+   headerStyle,
+   listStyle,
    isPlayerVisible,
 }: AlbumListProps): React.ReactElement {
    const { data: albums = [], isLoading } = useAlbums();
@@ -45,6 +50,8 @@ export function AlbumList({
             renderItem={renderAlbumItem}
             keyExtractor={keyExtractor}
             renderHeader={renderHeader}
+            headerStyle={headerStyle}
+            listStyle={listStyle}
             initialVisibleCount={initialVisibleCount}
             estimatedItemSize={ITEM_HEIGHT}
             bottomPadding={listPadding}
