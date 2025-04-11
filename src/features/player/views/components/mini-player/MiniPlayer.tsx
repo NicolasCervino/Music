@@ -58,7 +58,7 @@ export function MiniPlayer({ onPress, backgroundColor, isReady }: MiniPlayerProp
                      spacing={45}
                   />
                   <MarqueeText
-                     text={currentTrack?.artist ?? ''}
+                     text={currentTrack?.artist.name ?? ''}
                      style={{ width: 150 }}
                      textStyle={styles.artist}
                      variant="caption"

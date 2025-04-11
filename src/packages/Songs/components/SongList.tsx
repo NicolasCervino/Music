@@ -1,4 +1,5 @@
 import { Text } from '@/components/atoms';
+import { MenuOption } from '@/components/atoms/ContextMenu';
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
 import { PLAYER_BAR_HEIGHT } from '@/constants/dimensions';
 import { Track } from '@/entities';
@@ -15,6 +16,7 @@ export interface SongListProps extends SongListHookResult {
    renderHeader?: () => React.ReactNode;
    initialVisibleCount?: number;
    headerStyle?: StyleProp<ViewStyle>;
+   trackMenuOptions?: (track: Track) => MenuOption[] | undefined;
 }
 
 export function SongList({
@@ -29,17 +31,25 @@ export function SongList({
    renderHeader,
    headerStyle,
    initialVisibleCount = 5,
+   trackMenuOptions,
 }: SongListProps & { title?: string }) {
    const listPadding = isPlayerVisible ? PLAYER_BAR_HEIGHT : 0;
 
    const renderSongItem = useCallback(
       ({ item: track }: { item: Track }) => {
          const isActive = track.id === activeTrackId;
+         const menuOptions = trackMenuOptions ? trackMenuOptions(track) : undefined;
+
          return (
-            <TrackBanner track={track} isActive={isActive} onPress={() => onPlayTrack(track)} />
+            <TrackBanner
+               track={track}
+               isActive={isActive}
+               onPress={() => onPlayTrack(track)}
+               menuOptions={menuOptions}
+            />
          );
       },
-      [activeTrackId, onPlayTrack]
+      [activeTrackId, onPlayTrack, trackMenuOptions]
    );
 
    const keyExtractor = (item: Track) => `track-${item.id}-${item.title}`;

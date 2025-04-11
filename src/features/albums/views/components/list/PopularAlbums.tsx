@@ -10,14 +10,14 @@ export function PopularAlbums() {
    const { data: albums = [], isLoading } = usePopularAlbums(6);
    const router = useRouter();
 
-   const renderAlbumItem = ({ item: album }: { item: Album }) => (
+   const renderAlbumItem = ({ item: album, index }: { item: Album; index: number }) => (
       <PopularAlbumItem
          album={album}
          onPress={() => router.push(`/album/${album.id}` as unknown as Href)}
       />
    );
 
-   const keyExtractor = (item: Album) => item.id;
+   const keyExtractor = (item: Album, index: number) => `album-${item.id}-${index}`;
 
    return (
       <View style={{ paddingTop: 24, paddingBottom: 24 }}>

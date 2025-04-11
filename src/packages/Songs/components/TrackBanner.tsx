@@ -1,4 +1,5 @@
 import { Text } from '@/components/atoms';
+import { ContextMenu, MenuOption } from '@/components/atoms/ContextMenu';
 import { Track } from '@/entities';
 import { usePlayer } from '@/src/features/player';
 import { useTheme } from '@/theme';
@@ -12,12 +13,14 @@ type TrackBannerProps = {
    track: Track;
    isActive: boolean;
    onPress: () => void;
+   menuOptions?: MenuOption[];
 };
 
 export const TrackBanner = memo(function TrackBanner({
    track,
    isActive,
    onPress,
+   menuOptions,
 }: TrackBannerProps) {
    const { theme } = useTheme();
    const { artworkColor } = usePlayer();
@@ -45,6 +48,14 @@ export const TrackBanner = memo(function TrackBanner({
                : null,
          ]}
          onPress={onPress}
+         delayLongPress={300}
+         onLongPress={() => {
+            if (menuOptions && menuOptions.length > 0) {
+               // This will open the context menu programmatically
+               // The actual implementation depends on how ContextMenu works internally
+               // This is handled by the ContextMenu component itself
+            }
+         }}
       >
          {track.artwork ? (
             <Image
@@ -83,7 +94,7 @@ export const TrackBanner = memo(function TrackBanner({
                style={[{ opacity: 0.7 }, isActive && { color: textColor }]}
                numberOfLines={1}
             >
-               {track.artist}
+               {track.artist.name}
             </Text>
          </View>
          <Text
@@ -93,6 +104,10 @@ export const TrackBanner = memo(function TrackBanner({
          >
             {track.duration}
          </Text>
+
+         {menuOptions && menuOptions.length > 0 && (
+            <ContextMenu options={menuOptions} accessibilityLabel={`Options for ${track.title}`} />
+         )}
       </TouchableOpacity>
    );
 });

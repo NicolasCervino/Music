@@ -6,47 +6,39 @@ const PLAYLIST_QUERY_KEY = 'playlists';
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 
 export const usePlaylists = () => {
-   return useQuery({
+   const queryClient = useQueryClient();
+
+   const getAll = useQuery({
       queryKey: [PLAYLIST_QUERY_KEY],
       queryFn: DatabaseService.getPlaylists,
       staleTime: STALE_TIME,
    });
-};
 
-export const usePlaylist = (playlistId: string) => {
-   return useQuery({
-      queryKey: [PLAYLIST_QUERY_KEY, playlistId],
-      queryFn: () => DatabaseService.getPlaylistById(playlistId),
-      staleTime: STALE_TIME,
-      enabled: !!playlistId,
-   });
-};
+   const getById = (playlistId: string) =>
+      useQuery({
+         queryKey: [PLAYLIST_QUERY_KEY, playlistId],
+         queryFn: () => DatabaseService.getPlaylistById(playlistId),
+         staleTime: STALE_TIME,
+         enabled: !!playlistId,
+      });
 
-export const usePlaylistTracks = (playlistId: string) => {
-   return useQuery({
-      queryKey: [PLAYLIST_QUERY_KEY, playlistId, 'tracks'],
-      queryFn: () => DatabaseService.getPlaylistTracks(playlistId),
-      staleTime: STALE_TIME,
-      enabled: !!playlistId,
-   });
-};
+   const getTracks = (playlistId: string) =>
+      useQuery({
+         queryKey: [PLAYLIST_QUERY_KEY, playlistId, 'tracks'],
+         queryFn: () => DatabaseService.getPlaylistTracks(playlistId),
+         staleTime: STALE_TIME,
+         enabled: !!playlistId,
+      });
 
-export const useCreatePlaylist = () => {
-   const queryClient = useQueryClient();
-
-   return useMutation({
+   const create = useMutation({
       mutationFn: (playlist: Omit<Playlist, 'id'>) => DatabaseService.createPlaylist(playlist),
       onSuccess: newPlaylist => {
          queryClient.invalidateQueries({ queryKey: [PLAYLIST_QUERY_KEY] });
          return newPlaylist;
       },
    });
-};
 
-export const useUpdatePlaylist = () => {
-   const queryClient = useQueryClient();
-
-   return useMutation({
+   const update = useMutation({
       mutationFn: (playlist: Playlist) => DatabaseService.updatePlaylist(playlist),
       onSuccess: updatedPlaylist => {
          queryClient.invalidateQueries({ queryKey: [PLAYLIST_QUERY_KEY, updatedPlaylist.id] });
@@ -54,24 +46,16 @@ export const useUpdatePlaylist = () => {
          return updatedPlaylist;
       },
    });
-};
 
-export const useDeletePlaylist = () => {
-   const queryClient = useQueryClient();
-
-   return useMutation({
+   const remove = useMutation({
       mutationFn: (playlistId: string) => DatabaseService.deletePlaylist(playlistId),
       onSuccess: (_, playlistId) => {
          queryClient.invalidateQueries({ queryKey: [PLAYLIST_QUERY_KEY] });
          queryClient.removeQueries({ queryKey: [PLAYLIST_QUERY_KEY, playlistId] });
       },
    });
-};
 
-export const useAddTrackToPlaylist = () => {
-   const queryClient = useQueryClient();
-
-   return useMutation({
+   const addTrack = useMutation({
       mutationFn: ({ playlistId, trackId }: { playlistId: string; trackId: string }) =>
          DatabaseService.addTrackToPlaylist(playlistId, trackId),
       onSuccess: (_, { playlistId }) => {
@@ -80,12 +64,8 @@ export const useAddTrackToPlaylist = () => {
          queryClient.invalidateQueries({ queryKey: [PLAYLIST_QUERY_KEY] });
       },
    });
-};
 
-export const useRemoveTrackFromPlaylist = () => {
-   const queryClient = useQueryClient();
-
-   return useMutation({
+   const removeTrack = useMutation({
       mutationFn: ({ playlistId, trackId }: { playlistId: string; trackId: string }) =>
          DatabaseService.removeTrackFromPlaylist(playlistId, trackId),
       onSuccess: (_, { playlistId }) => {
@@ -94,12 +74,8 @@ export const useRemoveTrackFromPlaylist = () => {
          queryClient.invalidateQueries({ queryKey: [PLAYLIST_QUERY_KEY] });
       },
    });
-};
 
-export const useReorderPlaylistTracks = () => {
-   const queryClient = useQueryClient();
-
-   return useMutation({
+   const reorderTracks = useMutation({
       mutationFn: ({ playlistId, trackIds }: { playlistId: string; trackIds: string[] }) =>
          DatabaseService.reorderPlaylistTracks(playlistId, trackIds),
       onSuccess: (_, { playlistId }) => {
@@ -108,4 +84,19 @@ export const useReorderPlaylistTracks = () => {
          queryClient.invalidateQueries({ queryKey: [PLAYLIST_QUERY_KEY] });
       },
    });
+
+   return {
+      data: getAll.data,
+      isLoading: getAll.isLoading,
+      isError: getAll.isError,
+      error: getAll.error,
+      getById,
+      getTracks,
+      create,
+      update,
+      remove,
+      addTrack,
+      removeTrack,
+      reorderTracks,
+   };
 };

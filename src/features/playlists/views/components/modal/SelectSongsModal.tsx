@@ -4,10 +4,10 @@ import { Track } from '@/entities';
 import { useSongList } from '@/packages/Songs/hooks/useSongList';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import { useCreatePlaylist } from '../../../hooks';
+import { usePlaylists } from '../../../hooks';
 import { SelectableSong } from '../item/SelectableSong';
 
 interface SelectSongsModalProps {
@@ -20,8 +20,19 @@ type SelectionMap = Record<string, boolean>;
 export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React.ReactElement {
    const { theme } = useTheme();
    const { close } = useModalContext();
-   const { mutateAsync: createPlaylist } = useCreatePlaylist();
+   const { create } = usePlaylists();
    const [selectedMap, setSelectedMap] = useState<SelectionMap>({});
+
+   // Animation value
+   const fadeIn = useRef(new Animated.Value(0)).current;
+
+   useEffect(() => {
+      Animated.timing(fadeIn, {
+         toValue: 1,
+         duration: 250,
+         useNativeDriver: true,
+      }).start();
+   }, []);
 
    const { songs, isError, pagination } = useSongList();
 
@@ -45,7 +56,7 @@ export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React
 
       try {
          const now = Date.now();
-         await createPlaylist({
+         await create.mutateAsync({
             name: playlistData.name,
             description: playlistData.description,
             createdAt: now,
@@ -76,7 +87,23 @@ export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React
 
    return (
       <Modal overlay fullScreen>
-         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+         <Animated.View
+            style={[
+               styles.container,
+               {
+                  backgroundColor: theme.colors.background,
+                  opacity: fadeIn,
+                  transform: [
+                     {
+                        translateY: fadeIn.interpolate({
+                           inputRange: [0, 1],
+                           outputRange: [10, 0],
+                        }),
+                     },
+                  ],
+               },
+            ]}
+         >
             <View style={styles.header}>
                <Text
                   variant="heading"
@@ -88,8 +115,12 @@ export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React
                >
                   Select Songs
                </Text>
-               <Pressable onPress={close} style={styles.closeButton}>
-                  <Ionicons name="close" size={28} color={theme.colors.text} />
+               <Pressable
+                  style={styles.closeButton}
+                  onPress={close}
+                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+               >
+                  <Ionicons name="close" size={22} color={theme.colors.text + '99'} />
                </Pressable>
             </View>
 
@@ -127,12 +158,15 @@ export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React
                         title="Create Playlist"
                         onPress={handleCreatePlaylist}
                         disabled={selectedCount === 0}
-                        buttonStyle={styles.createButton}
+                        buttonStyle={[
+                           styles.createButton,
+                           { opacity: selectedCount === 0 ? 0.6 : 1 },
+                        ]}
                      />
                   </View>
                </>
             )}
-         </View>
+         </Animated.View>
       </Modal>
    );
 }
@@ -140,6 +174,8 @@ export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React
 const styles = StyleSheet.create({
    container: {
       flex: 1,
+      borderRadius: 16,
+      overflow: 'hidden',
    },
    header: {
       flexDirection: 'row',
@@ -149,9 +185,12 @@ const styles = StyleSheet.create({
       paddingTop: 24,
       paddingBottom: 16,
       marginBottom: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: 'rgba(128,128,128,0.3)',
    },
    closeButton: {
       padding: 4,
+      zIndex: 10,
    },
    centerContent: {
       flex: 1,
@@ -174,6 +213,11 @@ const styles = StyleSheet.create({
       borderTopWidth: 1,
       borderTopColor: 'rgba(128,128,128,0.15)',
       paddingBottom: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 4,
    },
    createButton: {
       paddingVertical: 8,

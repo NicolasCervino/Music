@@ -1,3 +1,4 @@
+import { ContextMenu, MenuOption } from '@/components/atoms/ContextMenu';
 import { Playlist } from '@/entities';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,12 +8,16 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface PlaylistCardProps {
    playlist: Playlist;
    onPress: () => void;
+   menuOptions?: MenuOption[];
 }
 
-export function PlaylistCard({ playlist, onPress }: PlaylistCardProps): React.ReactElement {
+export function PlaylistCard({
+   playlist,
+   onPress,
+   menuOptions,
+}: PlaylistCardProps): React.ReactElement {
    const { theme } = useTheme();
 
-   // Format track count
    const trackCount = playlist.trackIds.length;
    const trackText = trackCount === 1 ? '1 track' : `${trackCount} tracks`;
 
@@ -40,6 +45,13 @@ export function PlaylistCard({ playlist, onPress }: PlaylistCardProps): React.Re
             </Text>
             <Text style={[styles.subtitle, { color: theme.colors.text + '80' }]}>{trackText}</Text>
          </View>
+
+         {menuOptions && menuOptions.length > 0 && (
+            <ContextMenu
+               options={menuOptions}
+               accessibilityLabel={`Options for ${playlist.name}`}
+            />
+         )}
       </Pressable>
    );
 }
@@ -50,6 +62,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       marginHorizontal: 16,
       paddingVertical: 8,
+      position: 'relative',
    },
    coverContainer: {
       width: 56,

@@ -1,8 +1,11 @@
 import { Text } from '@/components/atoms';
+import { MenuOption } from '@/components/atoms/ContextMenu';
 import { ErrorBoundary } from '@/components/layout/error-boundary/ErrorBoundary';
 import { Track } from '@/src/entities';
 import { SongList } from '@/src/packages';
 import { useTheme } from '@/theme';
+import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { View } from 'react-native';
 import { usePlaylistDetail } from '../hooks/usePlaylistDetail';
 import { PlaylistDetailHeader } from './components/header/PlaylistDetailHeader';
@@ -14,12 +17,39 @@ export interface PlaylistDetailViewProps {
 export function PlaylistDetailView({ methods }: PlaylistDetailViewProps): React.ReactElement {
    const { theme } = useTheme();
    const tracks = methods.data?.tracks || [];
+   const router = useRouter();
 
    const onPlayAll = (allTracks: Track[]) => {
       if (allTracks.length > 0) {
          methods.onPlayTrack(allTracks[0]);
       }
    };
+
+   const getTrackMenuOptions = useCallback(
+      (track: Track): MenuOption[] => {
+         const playlistName = methods.playlist?.name || 'playlist';
+
+         return [
+            {
+               label: `Remove`,
+               icon: 'trash-outline',
+               onPress: () => {
+                  if (methods.playlist) {
+                     methods.removeTrackFromPlaylist(track.id);
+                  }
+               },
+            },
+            {
+               label: `Go to artist`,
+               icon: 'person-outline',
+               onPress: () => {
+                  router.push(`/artist/${track.artist.id}`);
+               },
+            },
+         ];
+      },
+      [methods.playlist]
+   );
 
    if (methods.isError) {
       return (
@@ -54,6 +84,7 @@ export function PlaylistDetailView({ methods }: PlaylistDetailViewProps): React.
                renderHeader={renderPlaylistHeader}
                headerStyle={{ paddingHorizontal: 10 }}
                onShufflePlay={methods.onShufflePlay}
+               trackMenuOptions={getTrackMenuOptions}
             />
          </ErrorBoundary>
       </View>

@@ -1,10 +1,11 @@
 import { Track } from '@/entities';
 import { useCurrentTrack, usePlayerControls } from '@/features/player';
-import { usePlaylist, usePlaylistTracks } from './usePlaylists';
+import { usePlaylists } from './usePlaylists';
 
 export function usePlaylistDetail(playlistId: string) {
-   const { data: playlist, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
-   const { data: tracks, isLoading: isTracksLoading, isError } = usePlaylistTracks(playlistId);
+   const { getById, getTracks, removeTrack } = usePlaylists();
+   const { data: playlist, isLoading: isPlaylistLoading } = getById(playlistId);
+   const { data: tracks, isLoading: isTracksLoading, isError } = getTracks(playlistId);
 
    // Player controls
    const { data: currentTrack } = useCurrentTrack();
@@ -30,6 +31,12 @@ export function usePlaylistDetail(playlistId: string) {
       }
    };
 
+   const removeTrackFromPlaylist = (trackId: string) => {
+      if (playlist) {
+         removeTrack.mutate({ playlistId: playlist.id, trackId });
+      }
+   };
+
    return {
       playlist,
       data: { tracks: tracks || [] },
@@ -40,6 +47,7 @@ export function usePlaylistDetail(playlistId: string) {
       isPlayerVisible,
       onPlayTrack,
       onShufflePlay,
+      removeTrackFromPlaylist,
       pagination: {
          onLoadMore: () => {},
          hasMore: false,

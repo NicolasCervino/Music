@@ -6,15 +6,21 @@ export const saveTracks = (tracks: Track[]): Promise<void> => {
    return databaseUtils.runInTransaction(async () => {
       for (const track of tracks) {
          const query = `INSERT OR REPLACE INTO tracks 
-          (id, url, title, artist, album, duration, genre, artwork, audioUrl, artworkColor, lastModified, fileSize) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          (id, url, title, artist_id, artist_name, artist_image, artist_genres, album_id, album_title, album_artist, album_artwork, duration, genre, artwork, audioUrl, artworkColor, lastModified, fileSize) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
          const params = [
             track.id,
             track.url || '',
             track.title || 'Unknown Title',
-            track.artist || 'Unknown Artist',
-            track.album || '',
+            track.artist.id,
+            track.artist.name,
+            track.artist.image || '',
+            JSON.stringify(track.artist.genres || []),
+            track.album.id,
+            track.album.title,
+            track.album.artist,
+            track.album.artwork || '',
             track.duration || '',
             track.genre || '',
             track.artwork || '',

@@ -54,7 +54,7 @@ export function ExpandedPlayerView({ backgroundColor, isReady }: PlayerViewProps
 
             <View style={styles.songInfo}>
                <Text style={styles.title}>{currentTrack.title}</Text>
-               <Text style={styles.artist}>{currentTrack.artist}</Text>
+               <Text style={styles.artist}>{currentTrack.artist.name}</Text>
             </View>
 
             <ProgressSlider />

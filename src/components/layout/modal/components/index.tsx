@@ -1,6 +1,7 @@
 import { useTheme } from '@/theme';
 import React from 'react';
 import {
+   Animated,
    Modal as NativeModal,
    ModalProps as NativeModalProps,
    StyleSheet,
@@ -8,12 +9,14 @@ import {
    View,
    ViewStyle,
 } from 'react-native';
+import { useModalAnimation } from '../hooks/useModalAnimation';
 import { useModalContext } from '../hooks/useModalContext';
 
 const styles = StyleSheet.create({
    overlay: {
       flex: 1,
       justifyContent: 'flex-end',
+      backgroundColor: 'transparent',
    },
    dismissibleArea: {
       flex: 1,
@@ -48,7 +51,7 @@ export const Modal: React.FC<Props> = ({
    children,
    style,
    height,
-   animationType = 'slide',
+   animationType = 'none',
    overlay = false,
    fullScreen = false,
    ...props
@@ -57,39 +60,51 @@ export const Modal: React.FC<Props> = ({
    const { isVisible, close, height: defaultHeight } = useModalContext();
 
    const HEIGHT = fullScreen ? '100%' : height ?? defaultHeight;
+   const { slideAnim, fadeAnim } = useModalAnimation(isVisible);
 
    return (
       <NativeModal
-         animationType={animationType}
+         animationType="none"
          transparent
          visible={isVisible}
          onRequestClose={close}
          {...props}
       >
-         {!fullScreen && (
-            <TouchableWithoutFeedback onPress={close}>
-               <View
+         <View style={styles.overlay}>
+            {overlay && (
+               <Animated.View
                   style={[
-                     styles.dismissibleArea,
-                     overlay && { backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+                     StyleSheet.absoluteFillObject,
+                     {
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        opacity: fadeAnim,
+                     },
                   ]}
                />
-            </TouchableWithoutFeedback>
-         )}
-         <View
-            style={[
-               styles.sheet,
-               fullScreen && styles.fullScreen,
-               {
-                  boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.1)',
-                  maxHeight: HEIGHT,
-                  height: '100%',
-                  backgroundColor: theme.colors.background,
-               },
-               style,
-            ]}
-         >
-            {children}
+            )}
+
+            {!fullScreen && (
+               <TouchableWithoutFeedback onPress={close}>
+                  <View style={styles.dismissibleArea} />
+               </TouchableWithoutFeedback>
+            )}
+
+            <Animated.View
+               style={[
+                  styles.sheet,
+                  fullScreen && styles.fullScreen,
+                  {
+                     transform: [{ translateY: slideAnim }],
+                     boxShadow: '0px -4px 8px rgba(0, 0, 0, 0.1)',
+                     maxHeight: HEIGHT,
+                     height: '100%',
+                     backgroundColor: theme.colors.background,
+                  },
+                  style,
+               ]}
+            >
+               {children}
+            </Animated.View>
          </View>
       </NativeModal>
    );
