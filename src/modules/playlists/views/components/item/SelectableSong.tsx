@@ -1,4 +1,4 @@
-import { usePlayer } from '@/features/player/hooks/usePlayer';
+import { usePlayer } from '@/modules/player/hooks/usePlayer';
 import { TrackBanner } from '@/packages/Songs/components/TrackBanner';
 import { Track } from '@/src/entities';
 import { useTheme } from '@/src/theme';

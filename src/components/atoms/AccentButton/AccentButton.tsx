@@ -1,4 +1,4 @@
-import { usePlayer } from '@/features/player/hooks/usePlayer';
+import { usePlayer } from '@/modules/player/hooks/usePlayer';
 import { useTheme } from '@/theme';
 import React from 'react';
 import {

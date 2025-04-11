@@ -1,6 +1,6 @@
 import { Text } from '@/components/atoms';
 import { Artist, Track } from '@/src/entities';
-import { usePlayer } from '@/src/features/player';
+import { usePlayer } from '@/src/modules/player';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, View } from 'react-native';

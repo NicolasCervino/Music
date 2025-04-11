@@ -1,7 +1,7 @@
 import { Text } from '@/components/atoms';
 import { ContextMenu, MenuOption } from '@/components/atoms/ContextMenu';
 import { Track } from '@/entities';
-import { usePlayer } from '@/src/features/player';
+import { usePlayer } from '@/src/modules/player';
 import { useTheme } from '@/theme';
 import { ensureColorContrast } from '@/utils/image';
 import { Ionicons } from '@expo/vector-icons';

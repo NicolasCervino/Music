@@ -1,15 +1,16 @@
+import { TabRoutes } from '@/constants';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 const tabs = [
-   { id: 'home', title: 'For You' },
-   { id: 'artists', title: 'Artists' },
-   { id: 'albums', title: 'Albums' },
-   { id: 'playlists', title: 'Playlists' },
+   { id: TabRoutes.HOME, title: 'For You' },
+   { id: TabRoutes.ARTISTS, title: 'Artists' },
+   { id: TabRoutes.ALBUMS, title: 'Albums' },
+   { id: TabRoutes.PLAYLISTS, title: 'Playlists' },
 ];
 
 type TabBarProps = {
-   activeTab: string;
-   onTabPress: (tabId: string) => void;
+   activeTab: TabRoutes;
+   onTabPress: (tabId: TabRoutes) => void;
 };
 
 export function TabBar({ activeTab, onTabPress }: TabBarProps) {

@@ -1,5 +1,5 @@
 import { ModalWrapper, useModal } from '@/components/layout/modal';
-import { useCurrentTrack } from '@/features/player';
+import { useCurrentTrack } from '@/modules/player';
 import { useTheme } from '@/theme';
 import React, { useState } from 'react';
 import { View } from 'react-native';

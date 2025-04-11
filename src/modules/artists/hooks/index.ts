@@ -1,5 +1,5 @@
 import { Track } from '@/src/entities';
-import { useCurrentTrack, usePlayerControls } from '@/src/features/player';
+import { useCurrentTrack, usePlayerControls } from '@/src/modules/player';
 import { useQuery } from '@tanstack/react-query';
 import { fetchArtists } from '../fetch';
 

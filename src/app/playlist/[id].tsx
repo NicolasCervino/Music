@@ -1,5 +1,5 @@
-import { PlaylistDetailView } from '@/src/features/playlists';
-import { usePlaylistDetail } from '@/src/features/playlists/hooks/usePlaylistDetail';
+import { PlaylistDetailView } from '@/src/modules/playlists';
+import { usePlaylistDetail } from '@/src/modules/playlists/hooks/usePlaylistDetail';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';

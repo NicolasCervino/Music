@@ -1,4 +1,4 @@
-import { ExpandablePlayerBarView, usePlayer } from '@/features/player';
+import { ExpandablePlayerBarView, usePlayer } from '@/modules/player';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/theme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';

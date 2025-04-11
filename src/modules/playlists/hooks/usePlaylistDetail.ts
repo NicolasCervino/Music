@@ -1,5 +1,5 @@
 import { Track } from '@/entities';
-import { useCurrentTrack, usePlayerControls } from '@/features/player';
+import { useCurrentTrack, usePlayerControls } from '@/modules/player';
 import { usePlaylists } from './usePlaylists';
 
 export function usePlaylistDetail(playlistId: string) {

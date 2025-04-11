@@ -1,5 +1,5 @@
-import { ArtistDetailView } from '@/features/artists/views/ArtistDetailView';
-import { useArtistSongs } from '@/src/features/artists';
+import { ArtistDetailView } from '@/modules/artists/views/ArtistDetailView';
+import { useArtistSongs } from '@/src/modules/artists';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';

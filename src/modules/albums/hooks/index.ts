@@ -1,9 +1,9 @@
 import { Track } from '@/src/entities';
-import { useCurrentTrack, usePlayerControls } from '@/src/features/player';
+import { useCurrentTrack, usePlayerControls } from '@/src/modules/player';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAlbums } from '../fetch';
 
-export const STALE_TIME = 1000 * 60 * 5; // 5 minutes
+const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 
 export function useAlbums() {
    return useQuery({

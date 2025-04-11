@@ -1,5 +1,5 @@
 import { Text } from '@/components/atoms';
-import { usePlayer } from '@/src/features/player';
+import { usePlayer } from '@/src/modules/player';
 import { useTheme } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';

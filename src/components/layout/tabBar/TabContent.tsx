@@ -1,20 +1,18 @@
-import { AlbumsView } from '@/features/albums';
-import { ArtistsView } from '@/features/artists';
-import { PlaylistsView } from '@/features/playlists';
-import { HomeView } from '@/views/Home/HomeView';
+import { TabRoutes } from '@/constants';
+import { AlbumsView, ArtistsView, HomeView, PlaylistsView } from '@/modules';
 import { View } from 'react-native';
 
 type TabContentProps = {
-   activeTab: string;
+   activeTab: TabRoutes;
 };
 
 export function TabContent({ activeTab }: TabContentProps) {
    return (
       <View style={{ flex: 1 }}>
-         {activeTab === 'home' && <HomeView />}
-         {activeTab === 'playlists' && <PlaylistsView />}
-         {activeTab === 'artists' && <ArtistsView />}
-         {activeTab === 'albums' && <AlbumsView />}
+         {activeTab === TabRoutes.HOME && <HomeView />}
+         {activeTab === TabRoutes.PLAYLISTS && <PlaylistsView />}
+         {activeTab === TabRoutes.ARTISTS && <ArtistsView />}
+         {activeTab === TabRoutes.ALBUMS && <AlbumsView />}
       </View>
    );
 }

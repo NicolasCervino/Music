@@ -1,32 +1,32 @@
 import { Text } from '@/components/atoms';
-import { Playlist, Track } from '@/src/entities';
-import { usePlayer } from '@/src/features/player';
+import { Album, Track } from '@/src/entities';
+import { usePlayer } from '@/src/modules/player';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-interface PlaylistDetailHeaderProps {
-   playlist: Playlist | null;
+interface AlbumHeaderProps {
+   album: Album | null;
    trackCount: number;
    tracks: Track[];
    onPlayAll: (tracks: Track[]) => void;
    onShufflePlay: () => void;
 }
 
-export function PlaylistDetailHeader({
-   playlist,
+export function AlbumHeader({
+   album,
    trackCount,
    tracks,
    onPlayAll,
    onShufflePlay,
-}: PlaylistDetailHeaderProps) {
+}: AlbumHeaderProps) {
    const { theme } = useTheme();
    const { artworkColor } = usePlayer();
 
    const buttonColor = artworkColor === '' ? theme.colors.primary : artworkColor;
 
-   if (!playlist) {
+   if (!album) {
       return null;
    }
 
@@ -38,44 +38,22 @@ export function PlaylistDetailHeader({
 
    return (
       <View style={styles.container}>
-         <View style={styles.playlistInfo}>
-            {playlist.coverArt ? (
-               <Image
-                  source={{ uri: playlist.coverArt }}
-                  style={[styles.artwork, { backgroundColor: theme.colors.card }]}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={200}
-               />
-            ) : (
-               <View
-                  style={[
-                     styles.artwork,
-                     {
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                     },
-                  ]}
-               >
-                  <Ionicons name="musical-note" size={50} color={theme.colors.text} />
-               </View>
-            )}
+         <View style={styles.albumInfo}>
+            <Image
+               source={{ uri: album.artwork }}
+               style={[styles.artwork, { backgroundColor: theme.colors.card }]}
+               contentFit="cover"
+               cachePolicy="memory-disk"
+               transition={200}
+            />
             <View style={styles.info}>
-               <Text style={[styles.title, { color: theme.colors.text }]}>
-                  {playlist.name || 'Unknown Playlist'}
+               <Text style={[styles.title, { color: theme.colors.text }]}>{album.title}</Text>
+               <Text style={[styles.artist, { color: theme.colors.text, opacity: 0.7 }]}>
+                  {album.artist}
                </Text>
-               <Text style={[styles.details, { color: theme.colors.text, opacity: 0.5 }]}>
-                  {trackCount} {trackCount === 1 ? 'track' : 'tracks'}
-               </Text>
-               {playlist.description && (
-                  <Text
-                     style={[styles.description, { color: theme.colors.text, opacity: 0.7 }]}
-                     numberOfLines={2}
-                  >
-                     {playlist.description}
-                  </Text>
-               )}
+               {/*   <Text style={[styles.details, { color: theme.colors.text, opacity: 0.5 }]}>
+                  {album.year} • {trackCount} tracks
+               </Text> */}
             </View>
          </View>
 
@@ -110,7 +88,7 @@ const styles = StyleSheet.create({
    container: {
       padding: 16,
    },
-   playlistInfo: {
+   albumInfo: {
       flexDirection: 'row',
       alignItems: 'center',
    },
@@ -127,8 +105,8 @@ const styles = StyleSheet.create({
       fontSize: 22,
       fontWeight: '700',
    },
-   description: {
-      fontSize: 14,
+   artist: {
+      fontSize: 16,
       marginTop: 4,
    },
    details: {
