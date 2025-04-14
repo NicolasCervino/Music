@@ -1,4 +1,4 @@
-import { AlbumDetailView, useAlbumTracks } from '@/src/features/albums';
+import { AlbumDetailView, useAlbumTracks } from '@/src/modules/albums';
 import { useTheme } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';

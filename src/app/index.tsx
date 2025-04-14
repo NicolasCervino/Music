@@ -1,7 +1,8 @@
 import HeaderLogo from '@/components/atoms/Logo/HeaderLogo';
 import { TabBar } from '@/components/layout';
-import { TabContent } from '@/components/layout/TabBar/TabContent';
-import { useInitializePlayer, usePlayer } from '@/features/player';
+import { TabContent } from '@/components/layout/tabBar/TabContent';
+import { TabRoutes } from '@/constants';
+import { useInitializePlayer, usePlayer } from '@/modules/player';
 import { useTheme } from '@/theme';
 import { useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -9,7 +10,7 @@ import { Platform, StatusBar, StatusBarStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MainTabs() {
-   const [activeTab, setActiveTab] = useState('home');
+   const [activeTab, setActiveTab] = useState<TabRoutes>(TabRoutes.HOME);
    const { isPlayerReady, isExpanded, artworkColor } = usePlayer();
    const initializePlayer = useInitializePlayer();
    const { theme } = useTheme();
@@ -19,7 +20,8 @@ export default function MainTabs() {
       initializePlayer.mutate();
    }, []);
 
-   const statusBarStyle = isExpanded && isPlayerReady ? 'light' : theme.dark ? 'light' : 'dark';
+   const statusBarStyle =
+      isExpanded && isPlayerReady ? 'light' : !theme.dark ? 'dark-content' : 'light-content';
 
    const statusBarBackgroundColor =
       isExpanded && isPlayerReady ? artworkColor : theme.colors.background;
@@ -44,7 +46,7 @@ export default function MainTabs() {
             translucent
          />
          <HeaderLogo />
-         <TabBar activeTab={activeTab} onTabPress={setActiveTab} />
+         <TabBar activeTab={activeTab} onTabPress={(tabId: TabRoutes) => setActiveTab(tabId)} />
          <TabContent activeTab={activeTab} />
       </SafeAreaView>
    );
