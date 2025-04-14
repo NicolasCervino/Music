@@ -1,5 +1,6 @@
 import { usePlayer } from '@/modules/player/hooks/usePlayer';
 import { useTheme } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
    Pressable,
@@ -7,6 +8,7 @@ import {
    StyleProp,
    StyleSheet,
    TextStyle,
+   View,
    ViewStyle,
 } from 'react-native';
 import { Text } from '../Text/Text';
@@ -16,6 +18,7 @@ interface AccentButtonProps extends PressableProps {
    textStyle?: StyleProp<TextStyle>;
    buttonStyle?: StyleProp<ViewStyle>;
    disabled?: boolean;
+   iconName?: string;
 }
 
 export const AccentButton: React.FC<AccentButtonProps> = ({
@@ -23,6 +26,7 @@ export const AccentButton: React.FC<AccentButtonProps> = ({
    textStyle,
    buttonStyle,
    disabled = false,
+   iconName,
    ...rest
 }) => {
    const { theme } = useTheme();
@@ -41,6 +45,11 @@ export const AccentButton: React.FC<AccentButtonProps> = ({
          disabled={disabled}
          {...rest}
       >
+         {iconName && (
+            <View style={styles.iconContainer}>
+               <Ionicons name={iconName as any} size={18} color="white" />
+            </View>
+         )}
          <Text style={[styles.text, textStyle]}>{title}</Text>
       </Pressable>
    );
@@ -52,9 +61,13 @@ const styles = StyleSheet.create({
       borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
+      flexDirection: 'row',
    },
    text: {
       color: 'white',
       fontWeight: 'bold',
+   },
+   iconContainer: {
+      marginRight: 8,
    },
 });

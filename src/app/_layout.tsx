@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { queryClient } from '../clients/queryClient';
 import { SplashScreen, useSplashScreen } from '../packages/splashscreen';
+import { ToastWrapper } from '../packages/toast';
 import { PlayerService } from '../services/TrackPlayerService';
 import { MusicService } from '../services/music-metadata/MusicMetadataService';
 
@@ -35,7 +36,9 @@ export default function RootLayout() {
    return (
       <QueryClientProvider client={queryClient}>
          <CustomThemeProvider>
-            <NavigationWrapper />
+            <ToastWrapper>
+               <NavigationWrapper />
+            </ToastWrapper>
          </CustomThemeProvider>
       </QueryClientProvider>
    );
