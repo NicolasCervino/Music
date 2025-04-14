@@ -2,7 +2,7 @@ import { Album, Artist, Track } from '@/entities';
 import * as MediaLibrary from 'expo-media-library';
 import { getAlbums, getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
 import { ColorService } from '../CacheColorService';
-import { DatabaseService } from '../DatabaseService';
+import { DatabaseService } from '../database';
 import {
    BATCH_SIZE,
    EXCLUDED_PATTERNS,
@@ -117,12 +117,35 @@ export const MusicService = {
                const artworkColor = song.cover
                   ? (await ColorService.getStoredColor(song.url)) || ''
                   : '';
+               const artistName = song.artist || 'Unknown Artist';
+               const albumTitle = song.album || 'Unknown Album';
+
+               // Create Artist object
+               const artistId = `artist-${musicMetadataUtils.stableHash(artistName)}`;
+               const artist = {
+                  id: artistId,
+                  name: artistName,
+                  image: song.cover || '',
+                  genres: song.genre ? [song.genre] : [],
+               };
+
+               // Create Album object
+               const albumId = `album-${musicMetadataUtils.stableHash(
+                  albumTitle + '-' + artistName
+               )}`;
+               const album = {
+                  id: albumId,
+                  title: albumTitle,
+                  artist: artistName,
+                  artwork: song.cover || '',
+               };
+
                return {
                   id: musicMetadataUtils.generateTrackId(song.url),
                   url: song.url,
                   title: song.title || 'Unknown Title',
-                  album: song.album || 'Unknown Album',
-                  artist: song.artist || 'Unknown Artist',
+                  artist,
+                  album,
                   duration: musicMetadataUtils.formatDuration(song.duration),
                   genre: song.genre || '',
                   artwork: song.cover || undefined,
@@ -198,27 +221,24 @@ export const MusicService = {
 
          // Process each track
          tracks.forEach(track => {
-            const artistName = track.artist || 'Unknown Artist';
+            const artist = track.artist;
 
-            // Generate a stable ID for the artist
-            const artistId = `artist-${musicMetadataUtils.stableHash(artistName)}`;
-
-            if (!artistsMap.has(artistId)) {
+            if (!artistsMap.has(artist.id)) {
                // First time seeing this artist
-               artistsMap.set(artistId, {
-                  id: artistId,
-                  name: artistName,
-                  image: track.artwork || '', // Use first track's artwork
-                  genres: [], // Initialize empty genres array
+               artistsMap.set(artist.id, {
+                  id: artist.id,
+                  name: artist.name,
+                  image: artist.image || track.artwork || '',
+                  genres: artist.genres || [],
                });
-            }
+            } else {
+               // Update artist's genres if track has genre info
+               const existingArtist = artistsMap.get(artist.id)!;
 
-            // Update artist's tracks count & possibly genre info
-            const artist = artistsMap.get(artistId)!;
-
-            // If track has genre and it's not already in artist's genres, add it
-            if (track.genre && !artist.genres.includes(track.genre)) {
-               artist.genres = [...artist.genres, track.genre];
+               // Merge genres from this track if they're not already included
+               if (track.genre && !existingArtist.genres.includes(track.genre)) {
+                  existingArtist.genres = [...existingArtist.genres, track.genre];
+               }
             }
          });
 
@@ -240,19 +260,18 @@ export const MusicService = {
          const artistData = new Map<string, Artist>();
 
          tracks.forEach(track => {
-            const artistName = track.artist || 'Unknown Artist';
-            const artistId = `artist-${musicMetadataUtils.stableHash(artistName)}`;
+            const artistId = track.artist.id;
 
             // Count tracks
             artistTrackCounts.set(artistId, (artistTrackCounts.get(artistId) || 0) + 1);
 
-            // Store artist data
+            // Store artist data if not already stored
             if (!artistData.has(artistId)) {
                artistData.set(artistId, {
                   id: artistId,
-                  name: artistName,
-                  image: track.artwork || '',
-                  genres: track.genre ? [track.genre] : [],
+                  name: track.artist.name,
+                  image: track.artist.image || track.artwork || '',
+                  genres: track.artist.genres || [],
                });
             }
          });
@@ -288,11 +307,8 @@ export const MusicService = {
 
          if (!artist) return [];
 
-         // Filtrar canciones por el nombre del artista
-         return allTracks.filter(track => {
-            const trackArtist = track.artist || '';
-            return trackArtist.toLowerCase() === artist.name.toLowerCase();
-         });
+         // Filter tracks by artist ID
+         return allTracks.filter(track => track.artist.id === artistId);
       } catch (error) {
          console.error('Error getting tracks by artist ID:', error);
          return [];
@@ -301,49 +317,49 @@ export const MusicService = {
 
    getAlbums: async (): Promise<Album[]> => {
       try {
-         // Primera estrategia: usar la base de datos de pistas para construir álbumes únicos
-         // Esto garantiza que solo se incluyan álbumes de pistas que ya pasaron el filtrado
+         // Get all tracks from database
          const tracks = await DatabaseService.getAllTracks();
 
          if (tracks.length > 0) {
             const albumsMap = new Map<string, Album>();
 
             tracks.forEach(track => {
-               // Aplicar el mismo filtro de exclusión que usamos para pistas individuales
-               if (musicMetadataUtils.shouldExcludeTrack(track.url || '')) {
+               // Skip tracks that are invalid or should be excluded
+               if (
+                  !track.url ||
+                  !track.album ||
+                  !track.artist ||
+                  musicMetadataUtils.shouldExcludeTrack(track.url)
+               ) {
                   return;
                }
 
-               const albumTitle = track.album || 'Unknown Album';
-               const albumArtist = track.artist || 'Unknown Artist';
+               const album = track.album;
+               const albumArtist = track.artist.name || 'Unknown Artist';
 
-               // Ignorar álbumes con títulos genéricos de WhatsApp o cualquier patrón excluido
+               // Ignore albums with excluded patterns
                if (
                   EXCLUDED_PATTERNS.some(
                      pattern =>
-                        albumTitle.toLowerCase().includes(pattern) ||
+                        (album.title || 'Unknown Album').toLowerCase().includes(pattern) ||
                         albumArtist.toLowerCase().includes(pattern)
                   )
                ) {
                   return;
                }
 
-               const albumId = `album-${musicMetadataUtils.stableHash(
-                  albumTitle + '-' + albumArtist
-               )}`;
-
-               if (!albumsMap.has(albumId)) {
-                  albumsMap.set(albumId, {
-                     id: albumId,
-                     title: albumTitle,
+               if (!albumsMap.has(album.id)) {
+                  albumsMap.set(album.id, {
+                     id: album.id,
+                     title: album.title || 'Unknown Album',
                      artist: albumArtist,
-                     artwork: track.artwork || '',
+                     artwork: album.artwork || track.artwork || '',
                   });
-               } else if (!albumsMap.get(albumId)?.artwork && track.artwork) {
-                  const existingAlbum = albumsMap.get(albumId)!;
-                  albumsMap.set(albumId, {
+               } else if (!albumsMap.get(album.id)?.artwork && (album.artwork || track.artwork)) {
+                  const existingAlbum = albumsMap.get(album.id)!;
+                  albumsMap.set(album.id, {
                      ...existingAlbum,
-                     artwork: track.artwork,
+                     artwork: album.artwork || track.artwork || '',
                   });
                }
             });
@@ -351,8 +367,8 @@ export const MusicService = {
             return Array.from(albumsMap.values());
          }
 
-         // Estrategia alternativa (fallback): usar la API nativa
-         // Solo si no tenemos pistas en la base de datos
+         // Fallback strategy using native API
+         // Only use if no tracks in database
          const albumsResult = await getAlbums({
             coverQuality: 50,
             artist: '',
@@ -368,7 +384,7 @@ export const MusicService = {
             const albumName = libraryAlbum.album || 'Unknown Album';
             const artistName = libraryAlbum.artist || 'Unknown Artist';
 
-            // Aplicar las mismas exclusiones que usamos para pistas
+            // Apply exclusions
             if (
                EXCLUDED_PATTERNS.some(
                   pattern =>
@@ -418,15 +434,8 @@ export const MusicService = {
 
          if (!album) return [];
 
-         // Filtrar canciones por título del álbum y artista
-         return allTracks.filter(track => {
-            const trackAlbum = track.album || '';
-            const trackArtist = track.artist || '';
-            return (
-               trackAlbum.toLowerCase() === album.title.toLowerCase() &&
-               trackArtist.toLowerCase() === album.artist.toLowerCase()
-            );
-         });
+         // Filter tracks by album ID
+         return allTracks.filter(track => track.album.id === albumId);
       } catch (error) {
          console.error('Error getting tracks by album ID:', error);
          return [];
@@ -435,23 +444,29 @@ export const MusicService = {
 
    getPopularAlbums: async (limit: number = 3): Promise<Album[]> => {
       try {
-         // Obtener todas las pistas
+         // Get all tracks
          const tracks = await DatabaseService.getAllTracks();
 
-         // Contar pistas por álbum
+         // Count tracks per album
          const albumTrackCounts = new Map<string, number>();
          const albumData = new Map<string, Album>();
 
          tracks.forEach(track => {
-            // Ignorar pistas excluidas
-            if (musicMetadataUtils.shouldExcludeTrack(track.url || '')) {
+            // Skip tracks that are invalid or should be excluded
+            if (
+               !track.url ||
+               !track.album ||
+               !track.artist ||
+               musicMetadataUtils.shouldExcludeTrack(track.url)
+            ) {
                return;
             }
 
-            const albumTitle = track.album || 'Unknown Album';
-            const albumArtist = track.artist || 'Unknown Artist';
+            const albumId = track.album.id;
+            const albumTitle = track.album.title || 'Unknown Album';
+            const albumArtist = track.artist.name || 'Unknown Artist';
 
-            // Ignorar álbumes con títulos genéricos o patrones excluidos
+            // Skip albums with excluded patterns
             if (
                EXCLUDED_PATTERNS.some(
                   pattern =>
@@ -462,38 +477,34 @@ export const MusicService = {
                return;
             }
 
-            const albumId = `album-${musicMetadataUtils.stableHash(
-               albumTitle + '-' + albumArtist
-            )}`;
-
-            // Contar pistas
+            // Count tracks
             albumTrackCounts.set(albumId, (albumTrackCounts.get(albumId) || 0) + 1);
 
-            // Almacenar datos del álbum
+            // Store album data
             if (!albumData.has(albumId)) {
                albumData.set(albumId, {
                   id: albumId,
                   title: albumTitle,
                   artist: albumArtist,
-                  artwork: track.artwork || '',
+                  artwork: track.album.artwork || track.artwork || '',
                });
-            } else if (!albumData.get(albumId)?.artwork && track.artwork) {
-               // Si ya existe el álbum pero no tiene artwork, actualizarlo
+            } else if (!albumData.get(albumId)?.artwork && (track.album.artwork || track.artwork)) {
+               // If already exists but no artwork, update it
                const existingAlbum = albumData.get(albumId)!;
                albumData.set(albumId, {
                   ...existingAlbum,
-                  artwork: track.artwork,
+                  artwork: track.album.artwork || track.artwork || '',
                });
             }
          });
 
-         // Ordenar álbumes por cantidad de pistas y obtener los principales
+         // Sort albums by track count and get top ones
          const topAlbumIds = [...albumTrackCounts.entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, limit)
             .map(entry => entry[0]);
 
-         // Obtener datos de álbumes para los principales
+         // Get album data for top albums
          return topAlbumIds.map(id => albumData.get(id)!);
       } catch (error) {
          console.error('Error getting popular albums:', error);

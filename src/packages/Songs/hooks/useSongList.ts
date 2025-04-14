@@ -1,5 +1,5 @@
 import { Track } from '@/entities';
-import { useCurrentTrack, usePlayerControls, useTracks } from '@/features/player';
+import { useCurrentTrack, usePlayerControls, useTracks } from '@/modules/player';
 import { useCallback, useMemo } from 'react';
 
 export interface SongListHookResult {

@@ -1,3 +1,4 @@
 export * from './delay/Delay';
 export * from './error-boundary/ErrorBoundary';
-export * from './TabBar/TabBar';
+export * from './modal';
+export * from './tabBar/TabBar';

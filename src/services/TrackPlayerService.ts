@@ -1,4 +1,4 @@
-import { Track } from '@/entities';
+import { Album, Artist, Track } from '@/entities';
 import TrackPlayer, {
    AppKilledPlaybackBehavior,
    Capability,
@@ -81,12 +81,14 @@ export const PlayerService = {
                id: track.id,
                url: audioUrl,
                title: track.title,
-               artist: track.artist,
+               artist: track.artist.name,
                artwork: track.artwork ? (track.artwork as string) : undefined,
                duration: parseInt(track.duration) || 0,
-               album: track.album,
+               album: track.album.title,
                genre: track.genre,
                artworkColor: track.artworkColor,
+               artistId: track.artist.id,
+               albumId: track.album.id,
             };
          });
 
@@ -114,15 +116,29 @@ export const PlayerService = {
          const trackData = await TrackPlayer.getTrack(trackIndex);
          if (!trackData) return null;
 
+         const artist: Artist = {
+            id: (trackData.artistId as string) || `artist-unknown`,
+            name: trackData.artist as string,
+            image: (trackData.artwork as string) || '',
+            genres: [],
+         };
+
+         const album: Album = {
+            id: (trackData.albumId as string) || `album-unknown`,
+            title: trackData.album as string,
+            artist: trackData.artist as string,
+            artwork: (trackData.artwork as string) || '',
+         };
+
          return {
             id: trackData.id as string,
             url: trackData.url as string,
             title: trackData.title as string,
-            artist: trackData.artist as string,
+            artist,
             artwork: trackData.artwork ? (trackData.artwork as string) : undefined,
             duration: trackData.duration?.toString() || '--:--',
             audioUrl: trackData.url as string,
-            album: trackData.album as string,
+            album,
             genre: trackData.genre as string,
             artworkColor: trackData.artworkColor as string,
          };
