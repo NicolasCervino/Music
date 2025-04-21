@@ -1,50 +1,54 @@
-# Welcome to your Expo app 👋
+# Music App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This project is a music application developed with React Native and Expo. It allows users to explore, organize, and play music files stored locally on their device, with a dynamic interface that adapts to the currently playing music.
 
-## Get started
+## Technologies Used
 
-1. Install dependencies
+*   **Framework:** React Native (with Expo)
+*   **Navigation:** Expo Router and custom Tab Bar system
+*   **Audio Playback:**`react-native-track-player`
+*   **Local File Management:** `react-native-get-music-files`, `expo-media-library`
+*   **Local Storage:**
+    *   **Expo SQLite:** Used to efficiently store and manage the scanned music library and user playlists.
+    *   **AsyncStorage:** Used to cache data, such as colors extracted from album artwork (`CacheColorService.ts`), to improve UI performance.
+*   **UI:**
+    *   Components: `expo-image`, `@gorhom/bottom-sheet`, `@shopify/flash-list`, `lottie-react-native`, `@expo/vector-icons`.
+    *   **Color Extraction:** `react-native-image-colors` to obtain dominant colors from artwork.
+*   **Language:** TypeScript
 
-   ```bash
-   npm install
-   ```
+## Key Features
 
-2. Start the app
+*   **Local Music Scanning and Storage:** Scans the device storage for music files and stores metadata and file paths in a local **SQLite** database for fast and efficient access.
+*   **Music Playback:** Built-in audio player with controls (play, pause, skip), track info, and support for background playback.
+*   **Dynamic and Adaptive User Interface:**
+    *   **Artwork Color Extraction:** Uses `react-native-image-colors` to extract the dominant color from the current song’s album artwork.
+    *   **Themed Player UI:** The extracted color is dynamically applied to the background of the mini-player and expanded player view, as well as to the status bar and navigation bar (on Android), creating a visually cohesive experience tailored to the music.
+    *   **Color Caching:** Extracted colors are cached using **AsyncStorage** to optimize performance and avoid recalculating them repeatedly.
+*   **Organization:**
+    *   View all songs (Tab: "Home").
+    *   Group by Artists (Tab: "Artists"), highlighting popular artists.
+    *   Group by Albums (Tab: "Albums"), highlighting popular albums.
+*   **Playlist Management:** Create, view, edit, and delete custom playlists (Tab: "Playlists"), stored using **SQLite**.
 
-   ```bash
-    npx expo start
-   ```
+## Main Screens
 
-In the output, you'll find options to open the app in a
+ The core of the application is organized into four main tabs:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+1.  **Home:** Displays a complete list of all songs...
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+    ![image](https://github.com/user-attachments/assets/815665fa-a067-48c3-bb7d-61a228b0cf71)
+3.  **Playlists:** Allows the user to manage their playlists...
 
-## Get a fresh project
+    ![image](https://github.com/user-attachments/assets/3d194636-e60f-4be3-a32c-79a3de371a04)
 
-When you're ready, run:
+4.  **Artists:** Displays a list of artists...
 
-```bash
-npm run reset-project
-```
+    ![image](https://github.com/user-attachments/assets/d16b57d8-f052-413f-a0c9-8ee9b33e6cfe)
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+5.  **Albums:** Displays a list of albums...
 
-## Learn more
+    ![image](https://github.com/user-attachments/assets/9922f4c7-7601-421f-8286-4caf3d564b48)
 
-To learn more about developing your project with Expo, look at the following resources:
+*   **Player:** Both the mini-player and expanded view adapt their background color to the artwork of the current song.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+    ![Grabación 2025-04-20 235955_1](https://github.com/user-attachments/assets/02be0597-db57-495f-8213-fc613affbade)
