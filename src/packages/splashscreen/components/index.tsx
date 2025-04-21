@@ -7,7 +7,7 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onFinish = () => {} }: SplashScreenProps) {
    const isDarkMode = useColorScheme() === 'dark';
-   const backgroundColor = isDarkMode ? '#0f0f0f' : '#ece034';
+   const backgroundColor = isDarkMode ? '#0f0f0f' : '#B82838';
 
    return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor }}>
@@ -19,11 +19,11 @@ export function SplashScreen({ onFinish = () => {} }: SplashScreenProps) {
             colorFilters={[
                ...Array.from({ length: 5 }, (_, i) => ({
                   keypath: `dot${i + 1}`,
-                  color: isDarkMode ? '#ece034' : '#000000',
+                  color: isDarkMode ? '#B82838' : '#000000',
                })),
                ...Array.from({ length: 5 }, (_, i) => ({
                   keypath: `line${i + 1}`,
-                  color: isDarkMode ? '#ece034' : '#000000',
+                  color: isDarkMode ? '#B82838' : '#000000',
                })),
             ]}
             loop={true}

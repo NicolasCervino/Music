@@ -12,12 +12,16 @@ import { SelectableSong } from '../item/SelectableSong';
 
 interface SelectSongsModalProps {
    playlistData?: { name: string; description: string };
+   onComplete?: () => void;
 }
 
 // Faster selection implementation using a plain object instead of Set
 type SelectionMap = Record<string, boolean>;
 
-export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React.ReactElement {
+export function SelectSongsModal({
+   playlistData,
+   onComplete,
+}: SelectSongsModalProps): React.ReactElement {
    const { theme } = useTheme();
    const { close } = useModalContext();
    const { create } = usePlaylists();
@@ -64,6 +68,8 @@ export function SelectSongsModal({ playlistData }: SelectSongsModalProps): React
             trackIds: selectedTracks,
          });
 
+         setSelectedMap({});
+         onComplete?.();
          close();
       } catch (error) {
          console.error('Error creating playlist:', error);

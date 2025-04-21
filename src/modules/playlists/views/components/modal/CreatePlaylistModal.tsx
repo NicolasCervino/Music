@@ -96,6 +96,9 @@ export function CreatePlaylistModal({
          // For creating a new playlist with song selection
          else if (onNext) {
             onNext(playlistData);
+            // Reset state after passing data to the next step
+            setPlaylistName('');
+            setDescription('');
          }
          // For creating a new empty playlist
          else {
