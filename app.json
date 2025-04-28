@@ -39,7 +39,7 @@
                   "image": "./src/assets/images/splash-icon-dark.png",
                   "backgroundColor": "#0f0f0f"
                },
-               "imageWidth": 200
+               "imageWidth": 440
             }
          ],
          "expo-sqlite"
