@@ -1,4 +1,5 @@
 import { TabRoutes } from '@/constants';
+import { useTheme } from '@/src/theme';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 const tabs = [
@@ -14,6 +15,11 @@ type TabBarProps = {
 };
 
 export function TabBar({ activeTab, onTabPress }: TabBarProps) {
+   const { theme } = useTheme();
+
+   const activeTabColor = theme.dark ? '#FFFFFF' : theme.colors.primary;
+   const activeTabTextColor = theme.dark ? '#000000' : '#FFFFFF';
+
    return (
       <View>
          <ScrollView
@@ -34,7 +40,7 @@ export function TabBar({ activeTab, onTabPress }: TabBarProps) {
                   key={tab.id}
                   onPress={() => onTabPress(tab.id)}
                   style={{
-                     backgroundColor: activeTab === tab.id ? '#FFFFFF' : '#2A2A2A',
+                     backgroundColor: activeTab === tab.id ? activeTabColor : '#2A2A2A',
                      borderRadius: 16,
                      paddingHorizontal: 12,
                      paddingVertical: 4,
@@ -44,7 +50,7 @@ export function TabBar({ activeTab, onTabPress }: TabBarProps) {
                >
                   <Text
                      style={{
-                        color: activeTab === tab.id ? '#000000' : '#FFFFFF',
+                        color: activeTab === tab.id ? activeTabTextColor : '#FFFFFF',
                         fontSize: 12,
                         fontWeight: activeTab === tab.id ? '500' : '400',
                         lineHeight: 16,

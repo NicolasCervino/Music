@@ -43,7 +43,6 @@ export const useSongList = (): SongListHookResult => {
             }
          });
       });
-
       return Array.from(uniqueSongs.values());
    }, [tracksData?.pages]);
 

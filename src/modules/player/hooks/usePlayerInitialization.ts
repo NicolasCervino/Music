@@ -1,4 +1,4 @@
-import { MusicService } from '@/services/music-metadata/MusicMetadataService';
+import { MusicService } from '@/services';
 import { PlayerService } from '@/services/TrackPlayerService';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -10,11 +10,11 @@ export function useInitializePlayer() {
          await PlayerService.setupPlayer();
       },
       onSuccess: () => {
-         // Prefetch the first page of tracks
          queryClient.prefetchInfiniteQuery({
             queryKey: ['tracks'],
             queryFn: ({ pageParam = 0 }) => MusicService.getAllTracks(pageParam),
             initialPageParam: 0,
+            staleTime: 1000 * 60 * 5,
          });
       },
    });

@@ -1,6 +1,7 @@
 import { Album, Artist, Track } from '@/entities';
 import * as MediaLibrary from 'expo-media-library';
 import { getAlbums, getAll, SortSongFields, SortSongOrder } from 'react-native-get-music-files';
+import { PermissionsService } from '../../packages/permissions/service';
 import { ColorService } from '../CacheColorService';
 import { DatabaseService } from '../database';
 import {
@@ -14,24 +15,21 @@ import { musicMetadataUtils } from './utils';
 
 export const MusicService = {
    initialize: async (): Promise<void> => {
-      try {
-         await DatabaseService.initDatabase();
-      } catch (error) {
-         console.error('Error initializing music service:', error);
-      }
+      await DatabaseService.initDatabase();
    },
 
    getAllTracks: async (page: number = 0): Promise<{ tracks: Track[]; hasMore: boolean }> => {
       try {
          await MusicService.initialize();
 
-         if (await DatabaseService.hasStoredTracks()) {
+         const hasStored = await DatabaseService.hasStoredTracks();
+
+         if (hasStored) {
             const { tracks: dbTracks, total } = await DatabaseService.getPagedTracks(
                page,
                PAGE_SIZE
             );
 
-            // Filter out unwanted tracks
             const tracks = dbTracks.filter(
                track => !musicMetadataUtils.shouldExcludeTrack(track.url || '')
             );
@@ -51,15 +49,18 @@ export const MusicService = {
 
          return await MusicService.scanAndSaveTracks(page);
       } catch (error) {
-         console.error('Error getting tracks:', error);
-         return await MusicService.scanAndSaveTracks(page);
+         // Fallback scan on error
+         try {
+            return await MusicService.scanAndSaveTracks(page);
+         } catch {
+            return { tracks: [], hasMore: false };
+         }
       }
    },
 
    scanAndSaveTracks: async (page: number = 0): Promise<{ tracks: Track[]; hasMore: boolean }> => {
       try {
-         const { status } = await MediaLibrary.requestPermissionsAsync();
-         if (status !== 'granted') throw new Error('Permission not granted');
+         await PermissionsService.throwIfNoMediaLibraryPermission();
 
          const scanMethods = [{ sortBy: SortSongFields.TITLE, sortOrder: SortSongOrder.ASC }];
 
@@ -179,52 +180,46 @@ export const MusicService = {
          const endIdx = startIdx + PAGE_SIZE;
          const pageOfTracks = uniqueTracks.slice(startIdx, endIdx);
 
+         const hasMore = endIdx < uniqueTracks.length;
+
          return {
             tracks: pageOfTracks,
-            hasMore: endIdx < uniqueTracks.length,
+            hasMore: hasMore,
          };
       } catch (error) {
-         console.error('Error scanning tracks:', error);
-         return { tracks: [], hasMore: false };
+         throw error;
       }
    },
 
    rescanTracks: async (): Promise<void> => {
-      try {
-         await DatabaseService.clearTracks();
+      await PermissionsService.throwIfNoMediaLibraryPermission();
 
-         // Try to access specific directories
-         for (const directory of MUSIC_DIRECTORIES) {
-            try {
-               await MediaLibrary.getAssetsAsync({
-                  mediaType: MediaLibrary.MediaType.audio,
-                  first: 10,
-               });
-            } catch (error) {
-               console.error(`Error accessing ${directory}:`, error);
-            }
+      await DatabaseService.clearTracks();
+      // Try to access specific directories
+      for (const directory of MUSIC_DIRECTORIES) {
+         try {
+            await MediaLibrary.getAssetsAsync({
+               mediaType: MediaLibrary.MediaType.audio,
+               first: 10,
+            });
+         } catch (error) {
+            console.error(`Error accessing ${directory}:`, error);
          }
-
-         await MusicService.scanAndSaveTracks(0);
-      } catch (error) {
-         console.error('Error rescanning tracks:', error);
       }
+
+      await MusicService.scanAndSaveTracks(0);
    },
 
    getArtists: async (): Promise<Artist[]> => {
       try {
-         // Get all tracks from database
          const tracks = await DatabaseService.getAllTracks();
 
-         // Create a map to store artist data
          const artistsMap = new Map<string, Artist>();
 
-         // Process each track
          tracks.forEach(track => {
             const artist = track.artist;
 
             if (!artistsMap.has(artist.id)) {
-               // First time seeing this artist
                artistsMap.set(artist.id, {
                   id: artist.id,
                   name: artist.name,
@@ -232,40 +227,32 @@ export const MusicService = {
                   genres: artist.genres || [],
                });
             } else {
-               // Update artist's genres if track has genre info
                const existingArtist = artistsMap.get(artist.id)!;
 
-               // Merge genres from this track if they're not already included
                if (track.genre && !existingArtist.genres.includes(track.genre)) {
                   existingArtist.genres = [...existingArtist.genres, track.genre];
                }
             }
          });
 
-         // Convert map to array
          return Array.from(artistsMap.values());
-      } catch (error) {
-         console.error('Error getting artists:', error);
+      } catch {
          return [];
       }
    },
 
    getPopularArtists: async (limit: number = 3): Promise<Artist[]> => {
       try {
-         // Get all tracks
          const tracks = await DatabaseService.getAllTracks();
 
-         // Count tracks per artist
          const artistTrackCounts = new Map<string, number>();
          const artistData = new Map<string, Artist>();
 
          tracks.forEach(track => {
             const artistId = track.artist.id;
 
-            // Count tracks
             artistTrackCounts.set(artistId, (artistTrackCounts.get(artistId) || 0) + 1);
 
-            // Store artist data if not already stored
             if (!artistData.has(artistId)) {
                artistData.set(artistId, {
                   id: artistId,
@@ -276,16 +263,13 @@ export const MusicService = {
             }
          });
 
-         // Sort artists by track count and get top ones
          const topArtistIds = [...artistTrackCounts.entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, limit)
             .map(entry => entry[0]);
 
-         // Get artist data for top artists
          return topArtistIds.map(id => artistData.get(id)!);
       } catch (error) {
-         console.error('Error getting popular artists:', error);
          return [];
       }
    },
@@ -294,8 +278,7 @@ export const MusicService = {
       try {
          const artists = await MusicService.getArtists();
          return artists.find(artist => artist.id === artistId) || null;
-      } catch (error) {
-         console.error('Error getting artist by ID:', error);
+      } catch {
          return null;
       }
    },
@@ -307,24 +290,20 @@ export const MusicService = {
 
          if (!artist) return [];
 
-         // Filter tracks by artist ID
          return allTracks.filter(track => track.artist.id === artistId);
-      } catch (error) {
-         console.error('Error getting tracks by artist ID:', error);
+      } catch {
          return [];
       }
    },
 
    getAlbums: async (): Promise<Album[]> => {
       try {
-         // Get all tracks from database
          const tracks = await DatabaseService.getAllTracks();
 
          if (tracks.length > 0) {
             const albumsMap = new Map<string, Album>();
 
             tracks.forEach(track => {
-               // Skip tracks that are invalid or should be excluded
                if (
                   !track.url ||
                   !track.album ||
@@ -337,7 +316,6 @@ export const MusicService = {
                const album = track.album;
                const albumArtist = track.artist.name || 'Unknown Artist';
 
-               // Ignore albums with excluded patterns
                if (
                   EXCLUDED_PATTERNS.some(
                      pattern =>
@@ -367,8 +345,6 @@ export const MusicService = {
             return Array.from(albumsMap.values());
          }
 
-         // Fallback strategy using native API
-         // Only use if no tracks in database
          const albumsResult = await getAlbums({
             coverQuality: 50,
             artist: '',
@@ -384,7 +360,6 @@ export const MusicService = {
             const albumName = libraryAlbum.album || 'Unknown Album';
             const artistName = libraryAlbum.artist || 'Unknown Artist';
 
-            // Apply exclusions
             if (
                EXCLUDED_PATTERNS.some(
                   pattern =>
@@ -411,8 +386,7 @@ export const MusicService = {
          });
 
          return Array.from(uniqueAlbums.values());
-      } catch (error) {
-         console.error('Error getting albums:', error);
+      } catch {
          return [];
       }
    },
@@ -421,8 +395,7 @@ export const MusicService = {
       try {
          const albums = await MusicService.getAlbums();
          return albums.find(album => album.id === albumId) || null;
-      } catch (error) {
-         console.error('Error getting album by ID:', error);
+      } catch {
          return null;
       }
    },
@@ -434,25 +407,20 @@ export const MusicService = {
 
          if (!album) return [];
 
-         // Filter tracks by album ID
          return allTracks.filter(track => track.album.id === albumId);
-      } catch (error) {
-         console.error('Error getting tracks by album ID:', error);
+      } catch {
          return [];
       }
    },
 
    getPopularAlbums: async (limit: number = 3): Promise<Album[]> => {
       try {
-         // Get all tracks
          const tracks = await DatabaseService.getAllTracks();
 
-         // Count tracks per album
          const albumTrackCounts = new Map<string, number>();
          const albumData = new Map<string, Album>();
 
          tracks.forEach(track => {
-            // Skip tracks that are invalid or should be excluded
             if (
                !track.url ||
                !track.album ||
@@ -466,7 +434,6 @@ export const MusicService = {
             const albumTitle = track.album.title || 'Unknown Album';
             const albumArtist = track.artist.name || 'Unknown Artist';
 
-            // Skip albums with excluded patterns
             if (
                EXCLUDED_PATTERNS.some(
                   pattern =>
@@ -477,10 +444,8 @@ export const MusicService = {
                return;
             }
 
-            // Count tracks
             albumTrackCounts.set(albumId, (albumTrackCounts.get(albumId) || 0) + 1);
 
-            // Store album data
             if (!albumData.has(albumId)) {
                albumData.set(albumId, {
                   id: albumId,
@@ -489,7 +454,6 @@ export const MusicService = {
                   artwork: track.album.artwork || track.artwork || '',
                });
             } else if (!albumData.get(albumId)?.artwork && (track.album.artwork || track.artwork)) {
-               // If already exists but no artwork, update it
                const existingAlbum = albumData.get(albumId)!;
                albumData.set(albumId, {
                   ...existingAlbum,
@@ -498,16 +462,13 @@ export const MusicService = {
             }
          });
 
-         // Sort albums by track count and get top ones
          const topAlbumIds = [...albumTrackCounts.entries()]
             .sort((a, b) => b[1] - a[1])
             .slice(0, limit)
             .map(entry => entry[0]);
 
-         // Get album data for top albums
          return topAlbumIds.map(id => albumData.get(id)!);
-      } catch (error) {
-         console.error('Error getting popular albums:', error);
+      } catch {
          return [];
       }
    },

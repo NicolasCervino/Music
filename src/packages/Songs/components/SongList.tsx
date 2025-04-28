@@ -69,6 +69,33 @@ export function SongList({
       );
    }
 
+   if (!isLoading && songs.length === 0) {
+      return (
+         <View style={{ flex: 1 }}>
+            {title && (
+               <View
+                  style={{
+                     paddingHorizontal: 20,
+                     paddingVertical: 16,
+                  }}
+               >
+                  <Text variant="heading">{title}</Text>
+               </View>
+            )}
+            <View
+               style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 40,
+               }}
+            >
+               <Text variant="subtitle">No songs found on this device.</Text>
+            </View>
+         </View>
+      );
+   }
+
    return (
       <ErrorBoundary isLoading={isLoading} fallback={<SongListSkeleton count={8} />}>
          <CollapsibleList
